@@ -1,8 +1,8 @@
 package com.thehiveproject.identity_service.config
 
 import com.thehiveproject.identity_service.auth.security.CustomUserDetailsService
+import com.thehiveproject.identity_service.auth.security.JwtAuthenticationEntryPoint
 import com.thehiveproject.identity_service.auth.security.JwtAuthenticationFilter
-import jakarta.servlet.http.HttpServletResponse
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.authentication.AuthenticationManager
@@ -22,6 +22,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 class SecurityConfig(
     private val userDetailsService: CustomUserDetailsService,
     private val jwtAuthenticationFilter: JwtAuthenticationFilter,
+    private val jwtAuthenticationEntryPoint: JwtAuthenticationEntryPoint
 ) {
     @Bean
     fun passwordEncoder(): PasswordEncoder {
@@ -55,24 +56,28 @@ class SecurityConfig(
 
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
-             http
-                 .csrf { csrf -> csrf.disable() }
-                 .sessionManagement {
-                     it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                 }
-                 .authorizeHttpRequests { auth ->
-                     auth.requestMatchers("/auth/**").permitAll()
-                     auth.anyRequest().authenticated()
-                 }
-                 .authenticationProvider(authenticationProvider())
-                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
-                 .exceptionHandling { exceptions ->
-                     exceptions.authenticationEntryPoint { _, response, authException ->
-                         response.status = HttpServletResponse.SC_UNAUTHORIZED
-                         response.contentType = "application/json"
-                         response.writer.write("""{"error":"Unauthorized","message":"${authException.message}"}""")
-                     }
-                 }
-             return http.build()
+        http
+            .csrf { csrf -> csrf.disable() }
+            .sessionManagement {
+                it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            }
+            .authorizeHttpRequests { auth ->
+                auth
+                    .requestMatchers(
+                        "/auth/**",
+                        "/v3/api-docs/**",
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                        "/redoc.html",
+                        "/scalar.html"
+                    ).permitAll()
+                    .anyRequest().authenticated()
+            }
+            .authenticationProvider(authenticationProvider())
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
+            .exceptionHandling { exceptions ->
+                exceptions.authenticationEntryPoint (jwtAuthenticationEntryPoint)
+            }
+        return http.build()
     }
 }

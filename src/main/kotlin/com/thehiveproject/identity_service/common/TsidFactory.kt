@@ -4,17 +4,17 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.time.Instant
 
+private val EPOCH_START = Instant.parse("2024-01-01T00:00:00Z").toEpochMilli()
+private const val NODE_ID_BITS = 10
+private const val SEQUENCE_BITS = 12
+private const val MAX_SEQUENCE = (1L shl SEQUENCE_BITS) - 1
+private const val NODE_ID_SHIFT = SEQUENCE_BITS
+private const val TIMESTAMP_SHIFT = SEQUENCE_BITS + NODE_ID_BITS
+
 @Component
 class TsidFactory(
-    @Value("\${app.node-id:1}") private val nodeId: Long
+    @field:Value("\${app.node-id:1}") private val nodeId: Long
 ) {
-    private val EPOCH_START = Instant.parse("2024-01-01T00:00:00Z").toEpochMilli()
-    private val NODE_ID_BITS = 10
-    private val SEQUENCE_BITS = 12
-    private val MAX_SEQUENCE = (1L shl SEQUENCE_BITS) - 1
-    private val NODE_ID_SHIFT = SEQUENCE_BITS
-    private val TIMESTAMP_SHIFT = SEQUENCE_BITS + NODE_ID_BITS
-
     private var lastTimestamp = -1L
     private var sequence = 0L
 

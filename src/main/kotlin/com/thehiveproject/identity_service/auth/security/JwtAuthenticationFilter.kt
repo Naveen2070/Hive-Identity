@@ -1,26 +1,26 @@
 package com.thehiveproject.identity_service.auth.security
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.thehiveproject.identity_service.auth.JwtService
 import io.jsonwebtoken.ExpiredJwtException
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
+import org.springframework.web.servlet.HandlerExceptionResolver
 
 @Component
 class JwtAuthenticationFilter(
     private val jwtService: JwtService,
-    private val userDetailsService: UserDetailsService
+    private val userDetailsService: UserDetailsService,
+    @param:Qualifier("handlerExceptionResolver")
+    private val resolver: HandlerExceptionResolver
 ) : OncePerRequestFilter() {
-
-    private val objectMapper = ObjectMapper()
 
     override fun doFilterInternal(
         request: HttpServletRequest,
@@ -56,25 +56,11 @@ class JwtAuthenticationFilter(
             }
 
         } catch (ex: ExpiredJwtException) {
-            val logger = LoggerFactory.getLogger(JwtAuthenticationFilter::class.java)
-            logger.warn("JWT token expired: ${ex.message}")
-            sendErrorResponse(response, "Token has expired")
-            return
-        } catch (ex: Exception) {
-            val logger = LoggerFactory.getLogger(JwtAuthenticationFilter::class.java)
-            logger.warn("JWT authentication failed: ${ex.message}")
-            sendErrorResponse(response, "Invalid token")
+            resolver.resolveException(request, response, null, ex)
             return
         }
-
         // Continue filter chain
         filterChain.doFilter(request, response)
     }
 
-    private fun sendErrorResponse(response: HttpServletResponse, message: String) {
-        response.status = HttpServletResponse.SC_UNAUTHORIZED
-        response.contentType = "application/json"
-        val errorResponse = mapOf("error" to "Unauthorized", "message" to message)
-        response.writer.write(objectMapper.writeValueAsString(errorResponse))
-    }
 }

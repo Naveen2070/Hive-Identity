@@ -1,28 +1,11 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="identity-service" type="GradleRunConfiguration" factoryName="Gradle" nameIsGenerated="true">
-    <ExternalSystemSettings>
-      <option name="executionName" />
-      <option name="externalProjectPath" value="$PROJECT_DIR$" />
-      <option name="externalSystemIdString" value="GRADLE" />
-      <option name="scriptParameters" value="-x test" />
-      <option name="taskDescriptions">
-        <list />
-      </option>
-      <option name="taskNames">
-        <list>
-          <option value="clean" />
-          <option value="build" />
-        </list>
-      </option>
-      <option name="vmOptions" />
-    </ExternalSystemSettings>
-    <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
-    <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
-    <ExternalSystemDebugDisabled>false</ExternalSystemDebugDisabled>
-    <DebugAllEnabled>false</DebugAllEnabled>
-    <RunAsTest>false</RunAsTest>
-    <GradleProfilingDisabled>false</GradleProfilingDisabled>
-    <GradleCoverageDisabled>false</GradleCoverageDisabled>
-    <method v="2" />
+  <configuration default="false" name="Identity-service" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <option name="ACTIVE_PROFILES" value="dev" />
+    <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
+    <module name="identity-service.main" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="com.thehiveproject.identity_service.IdentityServiceApplication" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
   </configuration>
 </component>

@@ -1,0 +1,64 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-seed-roles
+      author: naveen
+      changes:
+        - insert:
+            tableName: roles
+            columns:
+              - column: { name: name, value: "SUPER ADMIN" }
+              - column: { name: created_by, valueNumeric: "0" }
+              - column: { name: updated_by, valueNumeric: "0" }
+              - column: { name: created_at, valueComputed: "CURRENT_TIMESTAMP" }
+              - column: { name: updated_at, valueComputed: "CURRENT_TIMESTAMP" }
+              - column: { name: version, valueNumeric: "0" }
+              - column: { name: is_active, valueBoolean: "true" }
+              - column: { name: is_deleted, valueBoolean: "false" }
+
+        - insert:
+            tableName: roles
+            columns:
+              - column: { name: name, value: "ADMIN" }
+              - column: { name: created_by, valueNumeric: "0" }
+              - column: { name: updated_by, valueNumeric: "0" }
+              - column: { name: created_at, valueComputed: "CURRENT_TIMESTAMP" }
+              - column: { name: updated_at, valueComputed: "CURRENT_TIMESTAMP" }
+              - column: { name: version, valueNumeric: "0" }
+              - column: { name: is_active, valueBoolean: "true" }
+              - column: { name: is_deleted, valueBoolean: "false" }
+
+        - insert:
+            tableName: roles
+            columns:
+              - column: { name: name, value: "USER" }
+              - column: { name: created_by, valueNumeric: "0" }
+              - column: { name: updated_by, valueNumeric: "0" }
+              - column: { name: created_at, valueComputed: "CURRENT_TIMESTAMP" }
+              - column: { name: updated_at, valueComputed: "CURRENT_TIMESTAMP" }
+              - column: { name: version, valueNumeric: "0" }
+              - column: { name: is_active, valueBoolean: "true" }
+              - column: { name: is_deleted, valueBoolean: "false" }
+
+        - insert:
+            tableName: roles
+            columns:
+              - column: { name: name, value: "ORGANISER" }
+              - column: { name: created_by, valueNumeric: "0" }
+              - column: { name: updated_by, valueNumeric: "0" }
+              - column: { name: created_at, valueComputed: "CURRENT_TIMESTAMP" }
+              - column: { name: updated_at, valueComputed: "CURRENT_TIMESTAMP" }
+              - column: { name: version, valueNumeric: "0" }
+              - column: { name: is_active, valueBoolean: "true" }
+              - column: { name: is_deleted, valueBoolean: "false" }
+
+        - insert:
+            tableName: roles
+            columns:
+              - column: { name: name, value: "GUEST" }
+              - column: { name: created_by, valueNumeric: "0" }
+              - column: { name: updated_by, valueNumeric: "0" }
+              - column: { name: created_at, valueComputed: "CURRENT_TIMESTAMP" }
+              - column: { name: updated_at, valueComputed: "CURRENT_TIMESTAMP" }
+              - column: { name: version, valueNumeric: "0" }
+              - column: { name: is_active, valueBoolean: "true" }
+              - column: { name: is_deleted, valueBoolean: "false" }

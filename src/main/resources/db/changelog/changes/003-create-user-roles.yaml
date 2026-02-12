@@ -1,0 +1,36 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-create-user-roles-table
+      author: naveen
+      changes:
+        - createTable:
+            tableName: user_roles
+            columns:
+              - column:
+                  name: user_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_user_roles_user
+                    references: app_users(id)
+              - column:
+                  name: role_id
+                  type: INT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_user_roles_role
+                    references: roles(id)
+              # AUDIT FIELDS
+              - column: { name: created_by, type: BIGINT }
+              - column: { name: updated_by, type: BIGINT }
+              - column: { name: created_at, type: TIMESTAMP, defaultValueComputed: "CURRENT_TIMESTAMP" }
+              - column: { name: updated_at, type: TIMESTAMP, defaultValueComputed: "CURRENT_TIMESTAMP" }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: "0" }
+              - column: { name: is_active, type: BOOLEAN, defaultValueBoolean: true }
+              - column: { name: is_deleted, type: BOOLEAN, defaultValueBoolean: false }
+              - column: { name: deleted_at, type: TIMESTAMP }
+        # Composite Primary Key
+        - addPrimaryKey:
+            tableName: user_roles
+            columnNames: user_id, role_id
+            constraintName: pk_user_roles

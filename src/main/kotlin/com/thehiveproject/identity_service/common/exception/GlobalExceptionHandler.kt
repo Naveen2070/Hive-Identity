@@ -1,6 +1,7 @@
 package com.thehiveproject.identity_service.common.exception
 
 import com.thehiveproject.identity_service.auth.exception.InvalidCredentialsException
+import com.thehiveproject.identity_service.auth.exception.InvalidPasswordException
 import com.thehiveproject.identity_service.auth.exception.TokenExpiredException
 import com.thehiveproject.identity_service.user.exception.RoleNotFoundException
 import com.thehiveproject.identity_service.user.exception.UserAlreadyExistsException
@@ -123,7 +124,24 @@ class GlobalExceptionHandler {
         return ResponseEntity(errorResponse, HttpStatus.CONFLICT)
     }
 
-    // 7. Handle Everything Else (500)
+    // 7. Handle Forbidden (403)
+    @ExceptionHandler(
+        InvalidPasswordException::class
+    )
+    fun handleForbidden(
+        ex: RuntimeException,
+        request: WebRequest
+    ): ResponseEntity<ApiErrorResponse> {
+        val errorResponse = ApiErrorResponse(
+            status = HttpStatus.FORBIDDEN.value(),
+            error = HttpStatus.FORBIDDEN.reasonPhrase,
+            message = ex.message ?: "Forbidden request",
+            path = request.getDescription(false).replace("uri=", "")
+        )
+        return ResponseEntity(errorResponse, HttpStatus.CONFLICT)
+    }
+
+    // 8. Handle Everything Else (500)
     @ExceptionHandler(Exception::class)
     fun handleGlobalException(ex: Exception, request: WebRequest): ResponseEntity<ApiErrorResponse> {
         logger.error("Unexpected error", ex)

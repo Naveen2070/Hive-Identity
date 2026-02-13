@@ -4,12 +4,12 @@ import com.thehiveproject.identity_service.auth.dto.AuthResponse
 import com.thehiveproject.identity_service.auth.dto.LoginRequest
 import com.thehiveproject.identity_service.auth.dto.RegisterRequest
 import com.thehiveproject.identity_service.auth.exception.InvalidCredentialsException
+import com.thehiveproject.identity_service.auth.security.CustomUserDetails
 import com.thehiveproject.identity_service.user.RoleRepository
 import com.thehiveproject.identity_service.user.User
 import com.thehiveproject.identity_service.user.UserRepository
 import com.thehiveproject.identity_service.user.exception.RoleNotFoundException
 import com.thehiveproject.identity_service.user.exception.UserAlreadyExistsException
-import com.thehiveproject.identity_service.user.exception.UserNotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -64,14 +64,15 @@ class AuthServiceImpl(
                 SimpleGrantedAuthority("ROLE_${it.role.name}")
             }
 
-            val userDetails = org.springframework.security.core.userdetails.User(
+            val userDetails = CustomUserDetails(
+                savedUser.id!!,
                 savedUser.email,
                 savedUser.passwordHash,
-                savedUser.isActive,
-                true,
-                true,
-                true,
-                authorities
+                savedUser.isActive(),
+                accountNonExpired = true,
+                credentialsNonExpired = true,
+                accountNonLocked = true,
+                authorities = authorities
             )
 
             val customClaims = mapOf(
@@ -102,20 +103,17 @@ class AuthServiceImpl(
                 )
             )
 
-            val userDetails = authentication.principal as org.springframework.security.core.userdetails.UserDetails
-
-            val user = userRepository.findByEmail(loginRequest.email)
-                .orElseThrow { UserNotFoundException("User not found") }
+            val userDetails = authentication.principal as CustomUserDetails
 
             val customClaims = mapOf(
-                "id" to user.id!!,
-                "email" to user.email,
+                "id" to userDetails.id,
+                "email" to userDetails.username,
                 "roles" to userDetails.authorities.map { it.authority }
             )
 
             val token = jwtService.generateToken(customClaims, userDetails)
 
-            return AuthResponse(token = token, email = user.email)
+            return AuthResponse(token = token, email = userDetails.username)
 
         } catch (ex: AuthenticationException) {
             logger.error("Authentication failed for ${loginRequest.email}",ex)

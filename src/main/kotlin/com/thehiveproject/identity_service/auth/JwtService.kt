@@ -7,12 +7,12 @@ import io.jsonwebtoken.io.Decoders
 import io.jsonwebtoken.security.Keys
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Service
-import java.util.Date
+import java.util.*
 import javax.crypto.SecretKey
 
 @Service
 class JwtService (
-    private val jwtProperties: JwtProperties
+    jwtProperties: JwtProperties
 ){
 
     private var secretKey: String = jwtProperties.secret
@@ -60,6 +60,11 @@ class JwtService (
     ): T {
         val claims = extractAllClaims(token)
         return claimsResolver(claims)
+    }
+
+    fun extractId(token: String): Long {
+        val claims = extractAllClaims(token)
+        return claims["id"].toString().toLong()
     }
 
     private fun extractAllClaims(token: String): Claims {

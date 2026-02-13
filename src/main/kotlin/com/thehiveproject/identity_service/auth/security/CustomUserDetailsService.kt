@@ -2,7 +2,6 @@ package com.thehiveproject.identity_service.auth.security
 
 import com.thehiveproject.identity_service.user.UserRepository
 import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.security.core.userdetails.User
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.core.userdetails.UsernameNotFoundException
@@ -25,19 +24,20 @@ class CustomUserDetailsService(
 
         // Map Roles to Authorities
         val authorities = user.roles
-            .filter { !it.isDeleted }
+            .filter { !it.isDeleted() }
             .map { userRole ->
                 SimpleGrantedAuthority("ROLE_${userRole.role.name}")
             }.toSet()
 
         // Return the Spring Security User object
-        return User(
+        return CustomUserDetails(
+            user.id!!,
             user.email,
             user.passwordHash,
-            user.isActive,
-            user.isActive || !user.isDeleted,
+            !user.isInactive(),
+            user.isActive(),
             true,
-            !user.isDeleted,
+            !user.isDeleted(),
             authorities
         )
     }

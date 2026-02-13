@@ -50,4 +50,20 @@ class User(
     fun removeRole(role: Role) {
         this.roles.removeIf { it.role.id == role.id }
     }
+
+    fun activateUser() {
+        this.activate()
+    }
+
+    fun deactivateUser() {
+        this.deactivate()
+    }
+
+    fun softDeleteUser() {
+        this.softDelete()
+    }
+
+    fun restoreUser() {
+        this.restore()
+    }
 }

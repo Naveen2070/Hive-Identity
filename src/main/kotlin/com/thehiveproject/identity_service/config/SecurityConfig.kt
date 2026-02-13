@@ -69,7 +69,9 @@ class SecurityConfig(
                         "/swagger-ui/**",
                         "/swagger-ui.html",
                         "/redoc.html",
-                        "/scalar.html"
+                        "/redoc.html/**",
+                        "/scalar.html",
+                        "/scalar.html#tag/**"
                     ).permitAll()
                     .anyRequest().authenticated()
             }

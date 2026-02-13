@@ -131,7 +131,7 @@ class GlobalExceptionHandler {
         val errorResponse = ApiErrorResponse(
             status = HttpStatus.INTERNAL_SERVER_ERROR.value(),
             error = HttpStatus.INTERNAL_SERVER_ERROR.reasonPhrase,
-            message = "An unexpected error occurred. Please try again later.",
+            message = ex.message ?:"An unexpected error occurred. Please try again later.",
             path = request.getDescription(false).replace("uri=", "")
         )
         return ResponseEntity(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR)

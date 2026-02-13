@@ -1,6 +1,7 @@
 package com.thehiveproject.identity_service.common
 
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Component
 import java.time.Instant
 
@@ -12,8 +13,9 @@ private const val NODE_ID_SHIFT = SEQUENCE_BITS
 private const val TIMESTAMP_SHIFT = SEQUENCE_BITS + NODE_ID_BITS
 
 @Component
+@Lazy(false)
 class TsidFactory(
-    @field:Value("\${app.node-id:1}") private val nodeId: Long
+    @param:Value("\${app.node-id:1}") private val nodeId: Long
 ) {
     private var lastTimestamp = -1L
     private var sequence = 0L

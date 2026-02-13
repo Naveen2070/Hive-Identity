@@ -7,7 +7,7 @@ import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
 
 @Entity
-@Table(name = "app_users") // 👈 Renamed Table
+@Table(name = "app_users")
 class User(
 
     @Id
@@ -40,7 +40,10 @@ class User(
     }
 
     fun addRole(role: Role) {
-        val userRole = UserRole(this, role)
+        val userRole = UserRole(
+            user = this,
+            role = role
+        )
         this.roles.add(userRole)
     }
 

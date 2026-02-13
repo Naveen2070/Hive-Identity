@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.AuthenticationException
-import org.springframework.security.core.userdetails.UserDetailsService
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 
@@ -25,7 +25,6 @@ class AuthServiceImpl(
     private val userRepository: UserRepository,
     private val roleRepository: RoleRepository,
     private val authenticationManager: AuthenticationManager,
-    private val userDetailsService: UserDetailsService,
     private val jwtService: JwtService,
     private val passwordEncoder: PasswordEncoder
 ) : AuthService {
@@ -34,42 +33,51 @@ class AuthServiceImpl(
 
 
     override fun registerUser(user: RegisterRequest): AuthResponse {
-        val userEntity = userRepository.findByEmail(user.email)
-        if (userEntity.isPresent) {
+        // 1. Check if user exists (Query 1)
+        if (userRepository.findByEmail(user.email).isPresent) {
             throw UserAlreadyExistsException("User already exists")
         }
 
+        // 2. Validate Role
+        val allowedRoles = ALLOWED_SIGNUP_ROLES.split(",").toSet()
+        if (!allowedRoles.contains(user.role)) {
+            throw IllegalArgumentException("Invalid role: ${user.role}")
+        }
+
+        // 3. Fetch Role (Query 2)
+        val role = roleRepository.findByName(user.role)
+            .orElseThrow { RoleNotFoundException(name = user.role) }
+
+        // 4. Create User Object
         val newUser = User(
             email = user.email,
             passwordHash = passwordEncoder.encode(user.password),
             fullName = user.fullName,
             domainAccess = user.domainAccess
         )
-
-        val allowedRoles = ALLOWED_SIGNUP_ROLES.split(",").toSet()
-        if (!allowedRoles.contains(user.role)) {
-            throw IllegalArgumentException("Invalid role: ${user.role}")
-        }
-
-        val role = roleRepository.findByName(user.role)
-        if (role.isEmpty) {
-            throw RoleNotFoundException(name = user.role)
-        }
-        newUser.addRole(role.get())
+        newUser.addRole(role)
 
         try {
             val savedUser = userRepository.save(newUser)
-            val authenticationToken = UsernamePasswordAuthenticationToken(
-                user.email,
-                user.password
+
+            val authorities = savedUser.roles.map {
+                SimpleGrantedAuthority("ROLE_${it.role.name}")
+            }
+
+            val userDetails = org.springframework.security.core.userdetails.User(
+                savedUser.email,
+                savedUser.passwordHash,
+                savedUser.isActive,
+                true,
+                true,
+                true,
+                authorities
             )
 
-            authenticationManager.authenticate(authenticationToken)
-            val userDetails = userDetailsService.loadUserByUsername(user.email)
-
-            val customClaims = mapOf<String, Any>(
+            val customClaims = mapOf(
                 "id" to savedUser.id!!,
                 "email" to savedUser.email,
+                "roles" to savedUser.roles.map { "ROLE_${it.role.name}" }
             )
 
             val token = jwtService.generateToken(customClaims, userDetails)
@@ -78,6 +86,7 @@ class AuthServiceImpl(
                 token = token,
                 email = savedUser.email
             )
+
         } catch (e: Exception) {
             logger.error(e.message)
             throw e

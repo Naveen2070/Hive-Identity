@@ -1,11 +1,17 @@
 databaseChangeLog:
   - changeSet:
-      id: 003-create-user-roles-table
+      id: 003-create-user-roles
       author: naveen
       changes:
         - createTable:
             tableName: user_roles
             columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+                    nullable: false
               - column:
                   name: user_id
                   type: BIGINT
@@ -15,7 +21,7 @@ databaseChangeLog:
                     references: app_users(id)
               - column:
                   name: role_id
-                  type: INT
+                  type: BIGINT
                   constraints:
                     nullable: false
                     foreignKeyName: fk_user_roles_role
@@ -29,8 +35,7 @@ databaseChangeLog:
               - column: { name: is_active, type: BOOLEAN, defaultValueBoolean: true }
               - column: { name: is_deleted, type: BOOLEAN, defaultValueBoolean: false }
               - column: { name: deleted_at, type: TIMESTAMP }
-        # Composite Primary Key
-        - addPrimaryKey:
+        - addUniqueConstraint:
             tableName: user_roles
             columnNames: user_id, role_id
-            constraintName: pk_user_roles
+            constraintName: uq_user_role

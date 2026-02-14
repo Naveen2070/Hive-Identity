@@ -13,10 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/auth")
@@ -132,4 +129,41 @@ class AuthController(
         val response = authService.refreshToken(request)
         return ResponseEntity.ok(response)
     }
+
+    @Operation(
+        summary = "Logout user",
+        description = "Blacklists the access token and revokes the refresh token to log the user out"
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "User successfully logged out",
+                content = [Content()]
+            ),
+            ApiResponse(
+                responseCode = "400",
+                description = "Validation error",
+                content = [Content(schema = Schema(implementation = ApiErrorResponse::class))]
+            ),
+            ApiResponse(
+                responseCode = "401",
+                description = "Invalid or missing access token",
+                content = [Content(schema = Schema(implementation = ApiErrorResponse::class))]
+            ),
+            ApiResponse(
+                responseCode = "500",
+                description = "Internal server error",
+                content = [Content(schema = Schema(implementation = ApiErrorResponse::class))]
+            )
+        ]
+    )
+    @PostMapping("/logout")
+    fun logout(
+        @RequestHeader("Authorization") token: String,
+    ): ResponseEntity<Void> {
+        authService.logout(token)
+        return ResponseEntity.ok().build()
+    }
+
 }

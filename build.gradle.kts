@@ -21,7 +21,7 @@ repositories {
 }
 
 dependencies {
-// Spring Boot Starters (Core)
+	// Spring Boot Starters (Core)
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-security")
@@ -29,6 +29,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-hateoas")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.springframework.boot:spring-boot-starter-mail")
+	implementation("com.google.guava:guava:33.5.0-jre")
 
 	// Kotlin Support
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")

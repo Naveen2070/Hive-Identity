@@ -29,7 +29,8 @@ class AuthServiceImpl(
     private val authenticationManager: AuthenticationManager,
     private val jwtService: JwtService,
     private val refreshTokenService: RefreshTokenService,
-    private val passwordEncoder: PasswordEncoder
+    private val passwordEncoder: PasswordEncoder,
+    private val tokenBlacklistService: TokenBlacklistService,
 ) : AuthService {
 
     private val logger = LoggerFactory.getLogger(AuthServiceImpl::class.java)
@@ -163,5 +164,17 @@ class AuthServiceImpl(
             refreshToken = request.refreshToken,
             email = user.email
         )
+    }
+
+    @Transactional
+    override fun logout(token: String) {
+        // 1. Blacklist the Access Token (so it stops working immediately)
+        // We strip "Bearer " if it was passed with it, or just pass the raw token
+        val jwt = if (token.startsWith("Bearer ")) token.substring(7) else token
+        tokenBlacklistService.blacklistToken(jwt)
+
+        // 2. Delete the Refresh Token from DB (so they can't get a new one)
+        val userId = jwtService.extractId(jwt)
+        refreshTokenService.revokeTokensForUser(userId)
     }
 }

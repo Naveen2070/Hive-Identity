@@ -9,4 +9,5 @@ interface AuthService {
     fun registerUser(user: RegisterRequest): AuthResponse
     fun login(loginRequest: LoginRequest): AuthResponse
     fun refreshToken(request: TokenRefreshRequest): AuthResponse
+    fun logout(token: String)
 }

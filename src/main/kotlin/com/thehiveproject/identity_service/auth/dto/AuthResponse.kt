@@ -12,6 +12,12 @@ data class AuthResponse(
     val token: String,
 
     @field:Schema(
+        description = "Refresh token",
+        example = "f81d4fae-7dec-41d0-a765-00a0c91e6bf6"
+    )
+    val refreshToken: String,
+
+    @field:Schema(
         description = "Authenticated user email",
         example = "john.doe@example.com"
     )

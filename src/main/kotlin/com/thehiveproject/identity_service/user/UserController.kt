@@ -8,7 +8,6 @@ import com.thehiveproject.identity_service.user.dto.UserResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
-import io.swagger.v3.oas.annotations.parameters.RequestBody
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
@@ -128,15 +127,7 @@ class UserController(
     fun updateProfile(
         @AuthenticationPrincipal userDetails: UserDetails,
         @Valid
-        @RequestBody(
-            description = "Profile fields to update",
-            required = true,
-            content = [Content(
-                mediaType = "application/json",
-                schema = Schema(implementation = UpdateProfileRequest::class)
-            )]
-        )
-        @org.springframework.web.bind.annotation.RequestBody request: UpdateProfileRequest
+        @RequestBody request: UpdateProfileRequest
     ): ResponseEntity<UserResponse> {
         val response = userService.updateProfile(userDetails.username, request)
         return ResponseEntity.ok(response)
@@ -199,15 +190,7 @@ class UserController(
     fun changePassword(
         @AuthenticationPrincipal userDetails: UserDetails,
         @Valid
-        @RequestBody(
-            description = "Old and new password payload",
-            required = true,
-            content = [Content(
-                mediaType = "application/json",
-                schema = Schema(implementation = ChangePasswordRequest::class)
-            )]
-        )
-        @org.springframework.web.bind.annotation.RequestBody request: ChangePasswordRequest
+        @RequestBody request: ChangePasswordRequest
     ): ResponseEntity<Void> {
         userService.changePassword(userDetails.username, request)
         return ResponseEntity.ok().build()

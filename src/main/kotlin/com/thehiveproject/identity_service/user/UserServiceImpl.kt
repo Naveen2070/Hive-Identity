@@ -4,6 +4,8 @@ import com.thehiveproject.identity_service.auth.exception.InvalidPasswordExcepti
 import com.thehiveproject.identity_service.user.dto.ChangePasswordRequest
 import com.thehiveproject.identity_service.user.dto.UpdateProfileRequest
 import com.thehiveproject.identity_service.user.dto.UserResponse
+import com.thehiveproject.identity_service.user.exception.UserAlreadyDeactivatedException
+import com.thehiveproject.identity_service.user.exception.UserAlreadyDeletedException
 import com.thehiveproject.identity_service.user.exception.UserNotFoundException
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -59,6 +61,13 @@ class UserServiceImpl(
         val user = userRepository.findByEmail(email)
             .orElseThrow { UserNotFoundException("User not found") }
 
+        if (user.isDeleted()) {
+            throw UserAlreadyDeletedException("Deleted user cannot be deactivated")
+        }
+        if (user.isInactive()) {
+            throw UserAlreadyDeactivatedException("User is already deactivated")
+        }
+
         user.deactivateUser()
 
         userRepository.save(user)
@@ -69,6 +78,9 @@ class UserServiceImpl(
         val user = userRepository.findByEmail(email)
             .orElseThrow { UserNotFoundException("User not found") }
 
+        if (user.isDeleted()) {
+            throw UserAlreadyDeletedException("User is already deleted")
+        }
         user.softDeleteUser()
 
         userRepository.save(user)

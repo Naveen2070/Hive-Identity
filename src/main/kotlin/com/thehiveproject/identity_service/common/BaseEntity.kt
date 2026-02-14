@@ -31,49 +31,49 @@ abstract class BaseEntity(
     var updatedAt: Instant = Instant.now(),
 
     @Version
-    @Column(name = "version")
+    @Column(name = "version", nullable = false)
     var version: Long = 0,
 
     @Column(name = "is_active", nullable = false)
-    private var isActive: Boolean = true,
+    protected var active: Boolean = true,
 
     @Column(name = "is_deleted", nullable = false)
-    private var isDeleted: Boolean = false,
+    protected var deleted: Boolean = false,
 
     @Column(name = "deleted_at")
-    private var deletedAt: Instant? = null,
+    protected var deletedAt: Instant? = null,
 ) {
 
-    fun isActive(): Boolean = isActive && !isDeleted
+    fun isEnabled(): Boolean = active && !deleted
 
-    fun isDeleted(): Boolean = isDeleted
+    fun isDeleted(): Boolean = deleted
 
-    fun isInactive(): Boolean = !isActive
+    fun isInactive(): Boolean = !active
 
     protected fun activate() {
-        if (!isDeleted) {
-            isActive = true
+        if (!deleted) {
+            active = true
         }
     }
 
     protected fun deactivate() {
-        if (!isDeleted) {
-            isActive = false
+        if (!deleted) {
+            active = false
         }
     }
 
     protected fun softDelete() {
-        if (!isDeleted) {
-            isDeleted = true
-            isActive = false
+        if (!deleted) {
+            deleted = true
+            active = false
             deletedAt = Instant.now()
         }
     }
 
     protected fun restore() {
-        if (isDeleted) {
-            isDeleted = false
-            isActive = true
+        if (deleted) {
+            deleted = false
+            active = true
             deletedAt = null
         }
     }

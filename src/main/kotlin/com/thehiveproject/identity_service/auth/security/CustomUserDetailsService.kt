@@ -35,7 +35,7 @@ class CustomUserDetailsService(
             user.email,
             user.passwordHash,
             !user.isInactive(),
-            user.isActive(),
+            user.isEnabled(),
             true,
             !user.isDeleted(),
             authorities

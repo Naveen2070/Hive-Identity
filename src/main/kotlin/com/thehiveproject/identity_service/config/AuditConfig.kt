@@ -34,7 +34,6 @@ class AuditConfig {
 
             // 3. Extract Real User ID
             try {
-                logger.info("entered")
                 val userDetails = authentication.principal as CustomUserDetails
                 return@AuditorAware Optional.of(userDetails.id)
             } catch (e: Exception) {

@@ -58,7 +58,7 @@ data class UserResponse(
                 domainAccess = user.domainAccess,
                 roles = user.roles.map { it.role.name },
                 createdAt = user.createdAt,
-                isActive = user.isActive()
+                isActive = user.isEnabled()
             )
         }
     }

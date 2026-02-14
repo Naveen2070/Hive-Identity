@@ -2,10 +2,9 @@ package com.thehiveproject.identity_service.common.exception
 
 import com.thehiveproject.identity_service.auth.exception.InvalidCredentialsException
 import com.thehiveproject.identity_service.auth.exception.InvalidPasswordException
+import com.thehiveproject.identity_service.auth.exception.InvalidRefreshTokenException
 import com.thehiveproject.identity_service.auth.exception.TokenExpiredException
-import com.thehiveproject.identity_service.user.exception.RoleNotFoundException
-import com.thehiveproject.identity_service.user.exception.UserAlreadyExistsException
-import com.thehiveproject.identity_service.user.exception.UserNotFoundException
+import com.thehiveproject.identity_service.user.exception.*
 import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.MalformedJwtException
 import io.jsonwebtoken.UnsupportedJwtException
@@ -94,7 +93,8 @@ class GlobalExceptionHandler {
     @ExceptionHandler(
         InvalidCredentialsException::class,
         TokenExpiredException::class,
-        AuthenticationException::class
+        AuthenticationException::class,
+        InvalidRefreshTokenException::class
     )
     fun handleAuthErrors(
         ex: RuntimeException,
@@ -110,7 +110,11 @@ class GlobalExceptionHandler {
     }
 
     // 6. Handle Conflict (409)
-    @ExceptionHandler(UserAlreadyExistsException::class)
+    @ExceptionHandler(
+        UserAlreadyExistsException::class,
+        UserAlreadyDeactivatedException::class,
+        UserAlreadyDeletedException::class
+    )
     fun handleConflict(
         ex: RuntimeException,
         request: WebRequest

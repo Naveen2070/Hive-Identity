@@ -1,9 +1,6 @@
 package com.thehiveproject.identity_service.auth
 
-import com.thehiveproject.identity_service.auth.dto.AuthResponse
-import com.thehiveproject.identity_service.auth.dto.LoginRequest
-import com.thehiveproject.identity_service.auth.dto.RegisterRequest
-import com.thehiveproject.identity_service.auth.dto.TokenRefreshRequest
+import com.thehiveproject.identity_service.auth.dto.*
 import com.thehiveproject.identity_service.common.exception.ApiErrorResponse
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
@@ -163,6 +160,70 @@ class AuthController(
         @RequestHeader("Authorization") token: String,
     ): ResponseEntity<Void> {
         authService.logout(token)
+        return ResponseEntity.ok().build()
+    }
+
+    @Operation(
+        summary = "Initiate password reset",
+        description = "Sends a password reset link to the user's email if the account exists. Always returns 200 OK for security."
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Reset link sent",
+                content = [Content(schema = Schema(implementation = ApiErrorResponse::class))]
+            ),
+            ApiResponse(
+                responseCode = "400",
+                description = "Invalid email format",
+                content = [Content(schema = Schema(implementation = ApiErrorResponse::class))]
+            ),
+            ApiResponse(
+                responseCode = "500",
+                description = "Internal server error",
+                content = [Content(schema = Schema(implementation = ApiErrorResponse::class))]
+            )
+        ]
+    )
+    @PostMapping("/forgot-password")
+    fun forgotPassword(
+        @Valid @RequestBody request: ForgotPasswordRequest
+    ): ResponseEntity<Void> {
+        authService.initiatePasswordReset(request.email)
+        // SECURITY: Always return 200 OK.
+        // Do not reveal if the email exists or not to prevent user enumeration attacks.
+        return ResponseEntity.ok().build()
+    }
+
+    @Operation(
+        summary = "Reset password",
+        description = "Resets the user's password using a valid token"
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Password successfully reset",
+                content = [Content(schema = Schema(implementation = ApiErrorResponse::class))]
+            ),
+            ApiResponse(
+                responseCode = "400",
+                description = "Invalid token, expired token, or weak password",
+                content = [Content(schema = Schema(implementation = ApiErrorResponse::class))]
+            ),
+            ApiResponse(
+                responseCode = "500",
+                description = "Internal server error",
+                content = [Content(schema = Schema(implementation = ApiErrorResponse::class))]
+            )
+        ]
+    )
+    @PostMapping("/reset-password")
+    fun resetPassword(
+        @Valid @RequestBody request: ResetPasswordRequest
+    ): ResponseEntity<Void> {
+        authService.completePasswordReset(request.token, request.newPassword)
         return ResponseEntity.ok().build()
     }
 

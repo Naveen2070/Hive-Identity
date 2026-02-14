@@ -27,7 +27,7 @@ class RefreshTokenServiceImpl(
 
         val tokenEntity = refreshTokenRepository.save(refreshToken)
 
-        return tokenEntity.token!!
+        return tokenEntity.token
     }
 
     override fun verifyAndGetUserId(token: String): User {
@@ -39,7 +39,7 @@ class RefreshTokenServiceImpl(
             refreshTokenRepository.delete(tokenEntity.get())
             throw TokenExpiredException("Refresh token was expired. Please make a new signin request")
         }
-        return tokenEntity.get().user!!
+        return tokenEntity.get().user
     }
 
     override fun revokeTokensForUser(userId: Long) {

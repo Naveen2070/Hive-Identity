@@ -9,5 +9,7 @@ interface AuthService {
     fun registerUser(user: RegisterRequest): AuthResponse
     fun login(loginRequest: LoginRequest): AuthResponse
     fun refreshToken(request: TokenRefreshRequest): AuthResponse
+    fun initiatePasswordReset(email: String)
+    fun completePasswordReset(tokenString: String, newPassword: String)
     fun logout(token: String)
 }

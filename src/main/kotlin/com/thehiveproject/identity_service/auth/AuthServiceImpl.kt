@@ -5,6 +5,7 @@ import com.thehiveproject.identity_service.auth.dto.LoginRequest
 import com.thehiveproject.identity_service.auth.dto.RegisterRequest
 import com.thehiveproject.identity_service.auth.dto.TokenRefreshRequest
 import com.thehiveproject.identity_service.auth.exception.InvalidCredentialsException
+import com.thehiveproject.identity_service.auth.exception.TokenExpiredException
 import com.thehiveproject.identity_service.auth.security.CustomUserDetails
 import com.thehiveproject.identity_service.user.RoleRepository
 import com.thehiveproject.identity_service.user.User
@@ -19,6 +20,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.Instant
+import java.util.*
 
 private const val ALLOWED_SIGNUP_ROLES = "USER,ORGANIZER"
 
@@ -31,6 +34,7 @@ class AuthServiceImpl(
     private val refreshTokenService: RefreshTokenService,
     private val passwordEncoder: PasswordEncoder,
     private val tokenBlacklistService: TokenBlacklistService,
+    private val passwordResetTokenRepository: PasswordResetTokenRepository
 ) : AuthService {
 
     private val logger = LoggerFactory.getLogger(AuthServiceImpl::class.java)
@@ -164,6 +168,51 @@ class AuthServiceImpl(
             refreshToken = request.refreshToken,
             email = user.email
         )
+    }
+
+    @Transactional
+    override fun initiatePasswordReset(email: String) {
+        val user = userRepository.findActiveUser(email)
+        if (user.isEmpty) {
+            logger.info("Password reset requested for {}", email)
+            // SECURITY: Avoid disclosing account existence (prevents user enumeration).
+            // Always respond with the same behavior for valid and invalid emails.
+            return
+        }
+
+
+        // 1. Delete any old reset tokens for this user
+        passwordResetTokenRepository.deleteByUser(user.get())
+
+        // 2. Create new secure token (valid for 15 mins)
+        val resetToken = PasswordResetToken(
+            token = UUID.randomUUID().toString(),
+            user = user.get(),
+            expiryDate = Instant.now().plusSeconds(900)
+        )
+        passwordResetTokenRepository.save(resetToken)
+
+        // 3. TODO: Publish Event to RabbitMQ/Kafka here!
+        // eventPublisher.publish(ForgotPasswordEvent(email, resetToken.token))
+        logger.info("Password reset token generated for ${email}: ${resetToken.token}")
+    }
+
+    @Transactional
+    override fun completePasswordReset(tokenString: String, newPassword: String) {
+        val resetToken = passwordResetTokenRepository.findByToken(tokenString)
+            .orElseThrow { InvalidCredentialsException("Invalid password reset token") }
+
+        if (resetToken.isExpired()) {
+            passwordResetTokenRepository.delete(resetToken)
+            throw TokenExpiredException("Password reset token has expired")
+        }
+
+        val user = resetToken.user
+        user.passwordHash = passwordEncoder.encode(newPassword)
+        userRepository.save(user)
+
+        // Consume the token so it can't be used again
+        passwordResetTokenRepository.delete(resetToken)
     }
 
     @Transactional

@@ -12,30 +12,30 @@ import java.time.Instant
 
 @Entity
 @Table(
-    name = "refresh_tokens", uniqueConstraints = [UniqueConstraint(
-        name = "uq_refresh_token",
+    name = "password_reset_tokens", uniqueConstraints = [UniqueConstraint(
+        name = "uq_password_reset_token",
         columnNames = ["token"]
     )]
 )
-class RefreshToken(
+ class PasswordResetToken(
     @Id
     @Column(name = "id", nullable = false)
-    var id: Long? = null,
-
-    @param:NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "user_id", nullable = false)
-    var user: User,
+     var id: Long? = null,
 
     @param:Size(max = 255)
     @param:NotNull
     @Column(name = "token", nullable = false)
-    var token: String,
+     var token: String,
+
+    @param:NotNull
+    @ManyToOne(targetEntity = User::class, fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "user_id", nullable = false)
+     var user: User,
 
     @param:NotNull
     @Column(name = "expiry_date", nullable = false)
-    var expiryDate: Instant
+     var expiryDate: Instant
 ) : BaseEntity() {
 
     @PrePersist
@@ -43,5 +43,9 @@ class RefreshToken(
         if (this.id == null) {
             this.id = TsidFactory.fastGenerate()
         }
+    }
+
+    fun isExpired(): Boolean {
+        return Instant.now().isAfter(expiryDate)
     }
 }

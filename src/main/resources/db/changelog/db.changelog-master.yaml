@@ -9,3 +9,5 @@ databaseChangeLog:
       file: db/changelog/changes/004-seed-roles.yaml
   - include:
       file: db/changelog/changes/005-create-refresh-tokens.yaml
+  - include:
+      file: db/changelog/changes/006-create-password-reset-tokens.yaml

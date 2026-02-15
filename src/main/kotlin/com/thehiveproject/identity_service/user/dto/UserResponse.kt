@@ -1,6 +1,6 @@
 package com.thehiveproject.identity_service.user.dto
 
-import com.thehiveproject.identity_service.user.User
+import com.thehiveproject.identity_service.user.entity.User
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.Instant
 
@@ -9,7 +9,7 @@ data class UserResponse(
 
     @field:Schema(
         description = "Unique identifier of the user",
-        example = "550e8400-e29b-41d4-a716-446655440000"
+        example = "281088190180233216"
     )
     val id: String,
 

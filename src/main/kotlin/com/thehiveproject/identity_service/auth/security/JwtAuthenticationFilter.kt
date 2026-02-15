@@ -1,8 +1,8 @@
 package com.thehiveproject.identity_service.auth.security
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.thehiveproject.identity_service.auth.JwtService
-import com.thehiveproject.identity_service.auth.TokenBlacklistService
+import com.thehiveproject.identity_service.auth.service.JwtService
+import com.thehiveproject.identity_service.auth.service.TokenBlacklistService
 import io.jsonwebtoken.ExpiredJwtException
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest

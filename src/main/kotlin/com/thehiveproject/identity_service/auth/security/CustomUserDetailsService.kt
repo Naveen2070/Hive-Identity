@@ -1,6 +1,6 @@
 package com.thehiveproject.identity_service.auth.security
 
-import com.thehiveproject.identity_service.user.UserRepository
+import com.thehiveproject.identity_service.user.repository.UserRepository
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService

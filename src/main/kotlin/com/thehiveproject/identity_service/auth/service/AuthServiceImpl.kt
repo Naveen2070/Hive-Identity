@@ -1,20 +1,22 @@
 package com.thehiveproject.identity_service.auth.service
 
-import com.thehiveproject.identity_service.auth.entity.PasswordResetToken
-import com.thehiveproject.identity_service.auth.repository.PasswordResetTokenRepository
 import com.thehiveproject.identity_service.auth.dto.AuthResponse
 import com.thehiveproject.identity_service.auth.dto.LoginRequest
 import com.thehiveproject.identity_service.auth.dto.RegisterRequest
 import com.thehiveproject.identity_service.auth.dto.TokenRefreshRequest
+import com.thehiveproject.identity_service.auth.entity.PasswordResetToken
+import com.thehiveproject.identity_service.auth.event.ForgotPasswordEvent
 import com.thehiveproject.identity_service.auth.exception.InvalidCredentialsException
 import com.thehiveproject.identity_service.auth.exception.TokenExpiredException
+import com.thehiveproject.identity_service.auth.repository.PasswordResetTokenRepository
 import com.thehiveproject.identity_service.auth.security.CustomUserDetails
-import com.thehiveproject.identity_service.user.repository.RoleRepository
 import com.thehiveproject.identity_service.user.entity.User
-import com.thehiveproject.identity_service.user.repository.UserRepository
 import com.thehiveproject.identity_service.user.exception.RoleNotFoundException
 import com.thehiveproject.identity_service.user.exception.UserAlreadyExistsException
+import com.thehiveproject.identity_service.user.repository.RoleRepository
+import com.thehiveproject.identity_service.user.repository.UserRepository
 import org.slf4j.LoggerFactory
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.AuthenticationException
@@ -36,7 +38,8 @@ class AuthServiceImpl(
     private val refreshTokenService: RefreshTokenService,
     private val passwordEncoder: PasswordEncoder,
     private val tokenBlacklistService: TokenBlacklistService,
-    private val passwordResetTokenRepository: PasswordResetTokenRepository
+    private val passwordResetTokenRepository: PasswordResetTokenRepository,
+    private val eventPublisher: ApplicationEventPublisher
 ) : AuthService {
 
     private val logger = LoggerFactory.getLogger(AuthServiceImpl::class.java)
@@ -194,8 +197,8 @@ class AuthServiceImpl(
         )
         passwordResetTokenRepository.save(resetToken)
 
-        // 3. TODO: Publish Event to RabbitMQ/Kafka here!
-        // eventPublisher.publish(ForgotPasswordEvent(email, resetToken.token))
+        // 3. Publish Event to RabbitMQ
+        eventPublisher.publishEvent(ForgotPasswordEvent(user.get(), user.get().email, resetToken.token))
         logger.info("Password reset token generated for ${email}: ${resetToken.token}")
     }
 

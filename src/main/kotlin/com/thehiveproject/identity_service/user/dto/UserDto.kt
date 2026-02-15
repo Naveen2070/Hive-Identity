@@ -15,8 +15,8 @@ data class UserDto(
     val id: String? = null,
     val email: String? = null,
     val fullName: String? = null,
-    val domainAccess: MutableSet<String> = mutableSetOf("events"),
-    val roles: MutableSet<UserRoleDto> = mutableSetOf()
+    val domainAccess: Set<String> = setOf("events"),
+    val roles: Set<UserRoleDto> = setOf()
 ) : Serializable {
     data class UserRoleDto(
         val createdBy: Long? = null,

@@ -5,6 +5,7 @@ import com.thehiveproject.identity_service.common.dto.PaginatedResponse
 import com.thehiveproject.identity_service.common.dto.toPaginatedResponse
 import com.thehiveproject.identity_service.common.exception.ApiErrorResponse
 import com.thehiveproject.identity_service.user.dto.UserDto
+import com.thehiveproject.identity_service.user.mapper.toSanitized
 import com.thehiveproject.identity_service.user.service.UserService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
@@ -151,7 +152,7 @@ class AdminController(
         @Valid @RequestBody request: CreateUserRequest
     ): ResponseEntity<UserDto> {
         val user = userService.createInternalUser(request)
-        return ResponseEntity.status(201).body(user)
+        return ResponseEntity.status(201).body(user.toSanitized())
     }
 
     @Operation(

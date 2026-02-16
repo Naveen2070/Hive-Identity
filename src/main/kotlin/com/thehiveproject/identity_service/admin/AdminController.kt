@@ -22,7 +22,7 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/api/admin")
 @Tag(name = "Admin", description = "Administrative user management APIs")
 @PreAuthorize("hasRole('SUPER_ADMIN')")
 @SecurityRequirement(name = "bearerAuth")

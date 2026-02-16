@@ -42,7 +42,7 @@ databaseChangeLog:
         - insert:
             tableName: roles
             columns:
-              - column: { name: name, value: "ORGANISER" }
+              - column: { name: name, value: "ORGANIZER" }
               - column: { name: created_by, valueNumeric: "0" }
               - column: { name: updated_by, valueNumeric: "0" }
               - column: { name: created_at, valueComputed: "CURRENT_TIMESTAMP" }

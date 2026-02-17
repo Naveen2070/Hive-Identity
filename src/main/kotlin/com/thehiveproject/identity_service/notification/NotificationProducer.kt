@@ -25,12 +25,12 @@ class NotificationProducer(
             )
         )
 
-        logger.info("Publishing Email Event to RabbitMQ: ${RabbitMQConfig.QUEUE_EMAIL}")
+        logger.info("Publishing Email Event to RabbitMQ: ${RabbitMQConfig.QUEUE_IDENTITY_EMAIL}")
 
         try {
             rabbitTemplate.convertAndSend(
                 RabbitMQConfig.EXCHANGE_NAME,
-                RabbitMQConfig.ROUTING_KEY_EMAIL,
+                RabbitMQConfig.ROUTING_KEY_IDENTITY_EMAIL,
                 event
             )
         } catch (e: Exception) {

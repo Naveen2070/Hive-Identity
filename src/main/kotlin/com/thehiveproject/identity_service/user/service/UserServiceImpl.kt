@@ -147,6 +147,7 @@ class UserServiceImpl(
         userRepository.save(user)
     }
 
+    @Transactional
     override fun hardDeleteUser(id: Long) {
         if (!userRepository.existsById(id)) {
             throw UserNotFoundException("User not found")
@@ -157,11 +158,15 @@ class UserServiceImpl(
         userRepository.deleteById(id)
     }
 
+    @Transactional(readOnly = true)
     override fun getUserSummaryById(id: Long): UserSummary {
-        TODO("Not yet implemented")
+        val user = userRepository.findSummaryById(id)
+            .orElseThrow { UserNotFoundException("User not found") }
+        return user
     }
 
+    @Transactional(readOnly = true)
     override fun findBatchUserSummary(ids: List<Long>): List<UserSummary> {
-        TODO("Not yet implemented")
+        return userRepository.findByIdIn(ids)
     }
 }

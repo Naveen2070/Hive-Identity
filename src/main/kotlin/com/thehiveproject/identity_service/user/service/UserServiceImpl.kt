@@ -1,12 +1,9 @@
 package com.thehiveproject.identity_service.user.service
 
 import com.thehiveproject.identity_service.auth.dto.CreateUserRequest
-import com.thehiveproject.identity_service.user.dto.UserDto
 import com.thehiveproject.identity_service.auth.exception.InvalidPasswordException
 import com.thehiveproject.identity_service.auth.service.RefreshTokenService
-import com.thehiveproject.identity_service.user.dto.ChangePasswordRequest
-import com.thehiveproject.identity_service.user.dto.UpdateProfileRequest
-import com.thehiveproject.identity_service.user.dto.UserResponse
+import com.thehiveproject.identity_service.user.dto.*
 import com.thehiveproject.identity_service.user.entity.User
 import com.thehiveproject.identity_service.user.exception.*
 import com.thehiveproject.identity_service.user.mapper.UserMapper.toDto
@@ -158,5 +155,13 @@ class UserServiceImpl(
         refreshTokenService.revokeTokensForUser(id)
 
         userRepository.deleteById(id)
+    }
+
+    override fun getUserSummaryById(id: Long): UserSummary {
+        TODO("Not yet implemented")
+    }
+
+    override fun findBatchUserSummary(ids: List<Long>): List<UserSummary> {
+        TODO("Not yet implemented")
     }
 }

@@ -5,6 +5,7 @@ import com.thehiveproject.identity_service.common.exception.ApiErrorResponse
 import com.thehiveproject.identity_service.user.dto.ChangePasswordRequest
 import com.thehiveproject.identity_service.user.dto.UpdateProfileRequest
 import com.thehiveproject.identity_service.user.dto.UserResponse
+import com.thehiveproject.identity_service.user.dto.UserSummary
 import com.thehiveproject.identity_service.user.service.UserService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
@@ -17,13 +18,7 @@ import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.userdetails.UserDetails
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PatchMapping
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/users")
@@ -292,6 +287,20 @@ class UserController(
     ): ResponseEntity<Void> {
         userService.deleteAccount(userDetails.username)
         return ResponseEntity.noContent().build()
+    }
+
+
+    @GetMapping("/{id}")
+    fun getUserById(@PathVariable id: Long): ResponseEntity<UserSummary> {
+        val user = userService.getUserSummaryById(id)
+        return ResponseEntity.ok(UserSummary(user.id, user.fullName, user.email))
+    }
+
+
+    @PostMapping("/batch")
+    fun resolveUsers(@RequestBody ids: List<Long>): ResponseEntity<List<UserSummary>> {
+        val usersList = userService.findBatchUserSummary(ids)
+        return ResponseEntity.ok(usersList)
     }
 
 }

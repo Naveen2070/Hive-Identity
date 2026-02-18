@@ -1,10 +1,7 @@
 package com.thehiveproject.identity_service.user.service
 
 import com.thehiveproject.identity_service.auth.dto.CreateUserRequest
-import com.thehiveproject.identity_service.user.dto.UserDto
-import com.thehiveproject.identity_service.user.dto.ChangePasswordRequest
-import com.thehiveproject.identity_service.user.dto.UpdateProfileRequest
-import com.thehiveproject.identity_service.user.dto.UserResponse
+import com.thehiveproject.identity_service.user.dto.*
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 
@@ -19,4 +16,6 @@ interface UserService {
     fun deactivateAccount(email: String)
     fun deleteAccount(email: String)
     fun hardDeleteUser(id: Long)
+    fun getUserSummaryById(id: Long): UserSummary
+    fun findBatchUserSummary(ids: List<Long>): List<UserSummary>
 }

@@ -21,6 +21,7 @@ import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.AuthenticationException
 import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -112,6 +113,10 @@ class AuthServiceImpl(
     @Transactional
     override fun login(loginRequest: LoginRequest): AuthResponse {
         try {
+            val userEntity = userRepository.findByEmail(loginRequest.email)
+            if(userEntity.isEmpty)
+                throw UsernameNotFoundException("User not found with username or email: ${loginRequest.email}")
+
             val authentication = authenticationManager.authenticate(
                 UsernamePasswordAuthenticationToken(
                     loginRequest.email,

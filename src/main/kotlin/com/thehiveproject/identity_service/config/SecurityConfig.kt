@@ -1,6 +1,7 @@
 package com.thehiveproject.identity_service.config
 
 import com.thehiveproject.identity_service.auth.security.CustomUserDetailsService
+import com.thehiveproject.identity_service.auth.security.InternalServiceFilter
 import com.thehiveproject.identity_service.auth.security.JwtAuthenticationEntryPoint
 import com.thehiveproject.identity_service.auth.security.JwtAuthenticationFilter
 import org.springframework.context.annotation.Bean
@@ -24,7 +25,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 class SecurityConfig(
     private val userDetailsService: CustomUserDetailsService,
     private val jwtAuthenticationFilter: JwtAuthenticationFilter,
-    private val jwtAuthenticationEntryPoint: JwtAuthenticationEntryPoint
+    private val jwtAuthenticationEntryPoint: JwtAuthenticationEntryPoint,
+    private val internalServiceFilter: InternalServiceFilter
 ) {
     @Bean
     fun passwordEncoder(): PasswordEncoder {
@@ -67,6 +69,7 @@ class SecurityConfig(
                 auth
                     .requestMatchers(
                         "/api/auth/**",
+                        "/api/internal/**",
                         "/v3/api-docs/**",
                         "/swagger-ui/**",
                         "/swagger-ui.html",
@@ -78,6 +81,7 @@ class SecurityConfig(
                     .anyRequest().authenticated()
             }
             .authenticationProvider(authenticationProvider())
+            .addFilterBefore(internalServiceFilter, UsernamePasswordAuthenticationFilter::class.java)
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
             .exceptionHandling { exceptions ->
                 exceptions.authenticationEntryPoint (jwtAuthenticationEntryPoint)

@@ -1,12 +1,12 @@
-package com.thehiveproject.identity_service.notification
+package com.thehiveproject.identity_service.internal.controller
 
 import org.jetbrains.annotations.NotNull
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.validation.annotation.Validated
 
 @Validated
-@ConfigurationProperties(prefix = "frontend")
-data class FrontendProperties(
+@ConfigurationProperties(prefix = "internal")
+data class InternalProperties(
     @field:NotNull
-    val url: String
+    val sharedSecret: String
 )

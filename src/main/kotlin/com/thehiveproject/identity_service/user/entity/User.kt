@@ -1,13 +1,13 @@
-package com.thehiveproject.identity_service.user
+package com.thehiveproject.identity_service.user.entity
 
-import com.thehiveproject.identity_service.common.BaseEntity
-import com.thehiveproject.identity_service.common.TsidFactory
+import com.thehiveproject.identity_service.common.entity.BaseEntity
+import com.thehiveproject.identity_service.common.utils.TsidFactory
 import jakarta.persistence.*
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
 
 @Entity
-@Table(name = "app_users") // 👈 Renamed Table
+@Table(name = "app_users")
 class User(
 
     @Id
@@ -40,11 +40,30 @@ class User(
     }
 
     fun addRole(role: Role) {
-        val userRole = UserRole(this, role)
+        val userRole = UserRole(
+            user = this,
+            role = role
+        )
         this.roles.add(userRole)
     }
 
     fun removeRole(role: Role) {
         this.roles.removeIf { it.role.id == role.id }
+    }
+
+    fun activateUser() {
+        this.activate()
+    }
+
+    fun deactivateUser() {
+        this.deactivate()
+    }
+
+    fun softDeleteUser() {
+        this.softDelete()
+    }
+
+    fun restoreUser() {
+        this.restore()
     }
 }

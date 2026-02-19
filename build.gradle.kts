@@ -21,14 +21,15 @@ repositories {
 }
 
 dependencies {
-// Spring Boot Starters (Core)
+	// Spring Boot Starters (Core)
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.springframework.boot:spring-boot-starter-hateoas")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
-	implementation("org.springframework.boot:spring-boot-starter-mail")
+	implementation("org.springframework.boot:spring-boot-starter-amqp")
+	implementation("com.google.guava:guava:33.5.0-jre")
 
 	// Kotlin Support
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -42,6 +43,7 @@ dependencies {
 	implementation("io.jsonwebtoken:jjwt-api:0.13.0")
 	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.13.0")
 	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.13.0")
+	implementation("org.bouncycastle:bcprov-jdk18on:1.83")
 
 	implementation("com.bucket4j:bucket4j_jdk17-core:8.16.0")
 	implementation("org.owasp.encoder:encoder:1.4.0")
@@ -57,7 +59,9 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.boot:spring-boot-testcontainers")
 	testImplementation("org.springframework.security:spring-security-test")
+	testImplementation("org.springframework.amqp:spring-rabbit-test")
 
+	testImplementation("org.testcontainers:rabbitmq")
 	testImplementation("org.testcontainers:junit-jupiter")
 	testImplementation("org.testcontainers:postgresql")
 

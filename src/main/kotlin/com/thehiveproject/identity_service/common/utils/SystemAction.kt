@@ -1,4 +1,4 @@
-package com.thehiveproject.identity_service.common
+package com.thehiveproject.identity_service.common.utils
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder

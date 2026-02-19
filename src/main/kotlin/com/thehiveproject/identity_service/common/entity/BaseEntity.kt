@@ -1,4 +1,4 @@
-package com.thehiveproject.identity_service.common
+package com.thehiveproject.identity_service.common.entity
 
 import jakarta.persistence.Column
 import jakarta.persistence.EntityListeners
@@ -31,15 +31,53 @@ abstract class BaseEntity(
     var updatedAt: Instant = Instant.now(),
 
     @Version
-    @Column(name = "version")
+    @Column(name = "version", nullable = false)
     var version: Long = 0,
 
     @Column(name = "is_active", nullable = false)
-    var isActive: Boolean = true,
+    protected var active: Boolean = true,
 
     @Column(name = "is_deleted", nullable = false)
-    var isDeleted: Boolean = false,
+    protected var deleted: Boolean = false,
 
     @Column(name = "deleted_at")
-    var deletedAt: Instant? = null,
-)
+    protected var deletedAt: Instant? = null,
+) {
+
+    fun isEnabled(): Boolean = active && !deleted
+
+    fun isDeleted(): Boolean = deleted
+
+    fun isInactive(): Boolean = !active
+
+    fun wasDeletedAt(): Instant? = deletedAt
+
+    protected fun activate() {
+        if (!deleted) {
+            active = true
+        }
+    }
+
+    protected fun deactivate() {
+        if (!deleted) {
+            active = false
+        }
+    }
+
+    protected fun softDelete() {
+        if (!deleted) {
+            deleted = true
+            active = false
+            deletedAt = Instant.now()
+        }
+    }
+
+    protected fun restore() {
+        if (deleted) {
+            deleted = false
+            active = true
+            deletedAt = null
+        }
+    }
+
+}

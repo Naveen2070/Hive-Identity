@@ -1,4 +1,4 @@
-package com.thehiveproject.identity_service.admin
+package com.thehiveproject.identity_service.admin.controller
 
 import com.thehiveproject.identity_service.auth.dto.CreateUserRequest
 import com.thehiveproject.identity_service.common.dto.PaginatedResponse

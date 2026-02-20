@@ -1,0 +1,73 @@
+services:
+  # 1. Identity Database
+  identity-db:
+    image: postgres:17.7-alpine
+    container_name: hive-identity-db
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: identity_db
+      POSTGRES_USER: ${DB_USERNAME:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+    volumes:
+      - identity_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME:-admin} -d identity_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 2. RabbitMQ Message Broker
+  rabbitmq:
+    image: rabbitmq:4.2.3-management-alpine
+    container_name: hive-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "check_port_connectivity" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 3. Identity Application
+  identity-app:
+    build: .
+    container_name: hive-identity-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      identity-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      # Activate the prod profile you provided
+      SPRING_PROFILES_ACTIVE: prod
+
+      # Pointed specifically to the 'identity-db' container
+      SPRING_DATASOURCE_URL: jdbc:postgresql://identity-db:5432/identity_db
+
+      # Database
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      # JWT Authentication
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS}
+
+      # RabbitMQ
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST:-/}
+
+      # S2S Security
+      INTERNAL_SHARED_SECRET: ${INTERNAL_SHARED_SECRET}
+
+volumes:
+  identity_db_data:

@@ -10,13 +10,10 @@ import com.thehiveproject.identity_service.user.dto.UserSummary
 import com.thehiveproject.identity_service.user.exception.UserNotFoundException
 import com.thehiveproject.identity_service.user.service.UserService
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.boot.test.context.TestConfiguration
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Import
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
@@ -31,21 +28,14 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.time.Instant
 
-@WebMvcTest(InternalUserController::class)
+@WebMvcTest(
+    controllers = [InternalUserController::class],
+    properties = ["internal.shared-secret=super-secret-test-key-123"]
+)
 @EnableMethodSecurity
-@Import(InternalUserControllerIntegrationTest.MockPropertiesConfig::class) // 1. Inject our pre-stubbed config!
+@EnableConfigurationProperties(InternalProperties::class)
 class InternalUserControllerIntegrationTest {
 
-    // 2. We create the mock and stub it BEFORE Spring creates the InternalServiceFilter
-    @TestConfiguration
-    class MockPropertiesConfig {
-        @Bean
-        fun internalProperties(): InternalProperties {
-            val mockProps = mock(InternalProperties::class.java)
-            `when`(mockProps.sharedSecret).thenReturn("super-secret-test-key-123")
-            return mockProps
-        }
-    }
 
     @Autowired
     private lateinit var mockMvc: MockMvc

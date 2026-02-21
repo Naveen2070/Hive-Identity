@@ -12,11 +12,16 @@ import io.jsonwebtoken.security.SignatureException
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.security.authorization.AuthorizationDeniedException
 import org.springframework.security.core.AuthenticationException
 import org.springframework.web.bind.MethodArgumentNotValidException
+import org.springframework.web.bind.MissingRequestHeaderException
+import org.springframework.web.bind.MissingServletRequestParameterException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.context.request.WebRequest
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
@@ -35,6 +40,7 @@ class GlobalExceptionHandler {
             message = ex.message ?: "Resource not found",
             path = request.getDescription(false).replace("uri=", "")
         )
+        logger.error(ex.message, ex)
         return ResponseEntity(errorResponse, HttpStatus.NOT_FOUND)
     }
 
@@ -54,7 +60,83 @@ class GlobalExceptionHandler {
             message = errors,
             path = request.getDescription(false).replace("uri=", "")
         )
+        logger.error(ex.message, ex)
+        return ResponseEntity(errorResponse, HttpStatus.BAD_REQUEST)
+    }
 
+    // Handle Missing Request Parameters (400)
+    @ExceptionHandler(MissingServletRequestParameterException::class)
+    fun handleMissingParams(
+        ex: MissingServletRequestParameterException,
+        request: WebRequest
+    ): ResponseEntity<ApiErrorResponse> {
+        val errorResponse = ApiErrorResponse(
+            status = HttpStatus.BAD_REQUEST.value(),
+            error = HttpStatus.BAD_REQUEST.reasonPhrase,
+            message = "Missing required parameter: '${ex.parameterName}'",
+            path = request.getDescription(false).replace("uri=", "")
+        )
+        logger.error(ex.message, ex)
+        return ResponseEntity(errorResponse, HttpStatus.BAD_REQUEST)
+    }
+
+    @ExceptionHandler(IllegalArgumentException::class)
+    fun handleIllegalArgumentException(
+        ex: IllegalArgumentException,
+        request: WebRequest
+    ): ResponseEntity<ApiErrorResponse> {
+        val errorResponse = ApiErrorResponse(
+            status = HttpStatus.BAD_REQUEST.value(),
+            error = HttpStatus.BAD_REQUEST.reasonPhrase,
+            message = ex.message ?: "Invalid request argument provided.",
+            path = request.getDescription(false).replace("uri=", "")
+        )
+        logger.error(ex.message, ex)
+        return ResponseEntity(errorResponse, HttpStatus.BAD_REQUEST)
+    }
+
+    @ExceptionHandler(MissingRequestHeaderException::class)
+    fun handleMissingHeaders(
+        ex: MissingRequestHeaderException,
+        request: WebRequest
+    ): ResponseEntity<ApiErrorResponse> {
+        val errorResponse = ApiErrorResponse(
+            status = HttpStatus.BAD_REQUEST.value(),
+            error = HttpStatus.BAD_REQUEST.reasonPhrase,
+            message = "Missing required header: '${ex.headerName}'",
+            path = request.getDescription(false).replace("uri=", "")
+        )
+        logger.error(ex.message, ex)
+        return ResponseEntity(errorResponse, HttpStatus.BAD_REQUEST)
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException::class)
+    fun handleTypeMismatch(
+        ex: MethodArgumentTypeMismatchException,
+        request: WebRequest
+    ): ResponseEntity<ApiErrorResponse> {
+        val errorResponse = ApiErrorResponse(
+            status = HttpStatus.BAD_REQUEST.value(),
+            error = HttpStatus.BAD_REQUEST.reasonPhrase,
+            message = "Invalid value '${ex.value}' for parameter '${ex.name}'.",
+            path = request.getDescription(false).replace("uri=", "")
+        )
+        logger.error(ex.message, ex)
+        return ResponseEntity(errorResponse, HttpStatus.BAD_REQUEST)
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException::class)
+    fun handleMessageNotReadable(
+        ex: HttpMessageNotReadableException,
+        request: WebRequest
+    ): ResponseEntity<ApiErrorResponse> {
+        val errorResponse = ApiErrorResponse(
+            status = HttpStatus.BAD_REQUEST.value(),
+            error = HttpStatus.BAD_REQUEST.reasonPhrase,
+            message = "Malformed JSON request or invalid data types provided.",
+            path = request.getDescription(false).replace("uri=", "")
+        )
+        logger.error(ex.message, ex)
         return ResponseEntity(errorResponse, HttpStatus.BAD_REQUEST)
     }
 
@@ -74,8 +156,7 @@ class GlobalExceptionHandler {
     @ExceptionHandler(
         MalformedJwtException::class,
         SignatureException::class,
-        UnsupportedJwtException::class,
-        IllegalArgumentException::class
+        UnsupportedJwtException::class
     )
     fun handleInvalidJwt(ex: Exception, request: WebRequest): ResponseEntity<ApiErrorResponse> {
         logger.warn("Invalid Token Attempt: ${ex.message}")
@@ -86,6 +167,7 @@ class GlobalExceptionHandler {
             message = "Invalid authentication token",
             path = request.getDescription(false).replace("uri=", "")
         )
+        logger.error(ex.message, ex)
         return ResponseEntity(errorResponse, HttpStatus.UNAUTHORIZED)
     }
 
@@ -106,6 +188,7 @@ class GlobalExceptionHandler {
             message = ex.message ?: "Authentication failed",
             path = request.getDescription(false).replace("uri=", "")
         )
+        logger.error(ex.message, ex)
         return ResponseEntity(errorResponse, HttpStatus.UNAUTHORIZED)
     }
 
@@ -125,12 +208,15 @@ class GlobalExceptionHandler {
             message = ex.message ?: "Resource conflict",
             path = request.getDescription(false).replace("uri=", "")
         )
+        logger.error(ex.message, ex)
         return ResponseEntity(errorResponse, HttpStatus.CONFLICT)
     }
 
     // 7. Handle Forbidden (403)
     @ExceptionHandler(
-        InvalidPasswordException::class
+        InvalidPasswordException::class,
+        AccessDeniedException::class,
+        AuthorizationDeniedException::class
     )
     fun handleForbidden(
         ex: RuntimeException,
@@ -142,7 +228,8 @@ class GlobalExceptionHandler {
             message = ex.message ?: "Forbidden request",
             path = request.getDescription(false).replace("uri=", "")
         )
-        return ResponseEntity(errorResponse, HttpStatus.CONFLICT)
+        logger.error(ex.message, ex)
+        return ResponseEntity(errorResponse, HttpStatus.FORBIDDEN)
     }
 
     // 8. Handle Everything Else (500)
@@ -153,9 +240,10 @@ class GlobalExceptionHandler {
         val errorResponse = ApiErrorResponse(
             status = HttpStatus.INTERNAL_SERVER_ERROR.value(),
             error = HttpStatus.INTERNAL_SERVER_ERROR.reasonPhrase,
-            message = ex.message ?:"An unexpected error occurred. Please try again later.",
+            message = ex.message ?: "An unexpected error occurred. Please try again later.",
             path = request.getDescription(false).replace("uri=", "")
         )
+        logger.error(ex.message, ex)
         return ResponseEntity(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR)
     }
 }

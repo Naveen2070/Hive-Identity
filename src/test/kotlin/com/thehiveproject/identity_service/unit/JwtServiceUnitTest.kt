@@ -9,9 +9,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.Mockito.lenient
-import org.mockito.Mockito.`when`
-import org.mockito.Mockito.mock
+import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
@@ -126,8 +124,10 @@ class JwtServiceUnitTest {
         val user = mockUser("user@test.com")
         val token = jwtService.generateToken(user)
 
-        // Simulating a hacker modifying the signature at the end of the token
-        val tamperedToken = token.dropLast(2) + "ab"
+        // Dynamically change the last character to guarantee it is always corrupted
+        val lastChar = token.last()
+        val mutatedChar = if (lastChar == 'A') 'B' else 'A'
+        val tamperedToken = token.dropLast(1) + mutatedChar
 
         assertThrows<SignatureException> {
             jwtService.isTokenValid(tamperedToken, user)

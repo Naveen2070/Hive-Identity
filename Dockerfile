@@ -21,7 +21,7 @@ RUN gradle bootJar --no-daemon -x test
 # -----------------------------------------------------------------------------
 # Stage 2: Run the Application (JRE)
 # -----------------------------------------------------------------------------
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:21-jre-noble
 
 WORKDIR /app
 

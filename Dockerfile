@@ -25,15 +25,14 @@ FROM eclipse-temurin:21-jre-noble
 
 WORKDIR /app
 
-# 1. Create a non-root user for security (Best Practice)
-RUN addgroup -S spring && adduser -S spring -G spring
+# 1. Create a non-root user for security (Ubuntu/Debian syntax)
+RUN groupadd -r spring && useradd -r -g spring spring
 USER spring:spring
 
 # 2. Copy the built JAR from the builder stage
-#    We use a wildcard *.jar because the version number might change
 COPY --from=builder /app/build/libs/*.jar app.jar
 
-# 3. Expose the port (Documentation only)
+# 3. Expose the port
 EXPOSE 8081
 
 # 4. Run the application

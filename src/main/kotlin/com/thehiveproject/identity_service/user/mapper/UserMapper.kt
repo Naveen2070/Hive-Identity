@@ -21,7 +21,6 @@ object UserMapper {
             id = this.id.toString(),
             email = this.email,
             fullName = this.fullName,
-            domainAccess = this.domainAccess.toSet(),
             roles = this.roles.map { it.toDto() }.toSet()
         )
     }
@@ -39,7 +38,8 @@ object UserMapper {
             deletedAt = this.wasDeletedAt(),
             id = this.id.toString(),
             roleId = this.role.id,
-            roleName = this.role.name
+            roleName = this.role.name,
+            domain = this.domain
         )
     }
 }
@@ -48,7 +48,7 @@ fun UserDto.toSanitized(): UserDto {
     return this.copy(
         email = sanitizeForHtml(this.email),
         fullName = sanitizeForHtml(this.fullName),
-        roles = this.roles.map { it.toSanitized() }.toMutableSet()
+        roles = this.roles.map { it.toSanitized() }.toSet()
     )
 }
 

@@ -1,0 +1,29 @@
+databaseChangeLog:
+  - changeSet:
+      id: 007-multi-tenant-rbac
+      author: naveen
+      changes:
+        # 1. Add 'domain' column to user_roles
+        - addColumn:
+            tableName: user_roles
+            columns:
+              - column:
+                  name: domain
+                  type: VARCHAR(50)
+                  defaultValue: 'events'
+                  constraints:
+                    nullable: false
+
+        # 2. Update Unique Constraint on user_roles
+        - dropUniqueConstraint:
+            tableName: user_roles
+            constraintName: uq_user_role
+        - addUniqueConstraint:
+            tableName: user_roles
+            columnNames: user_id, role_id, domain
+            constraintName: uq_user_role_domain
+
+        # 3. Drop domain_access from app_users
+        - dropColumn:
+            tableName: app_users
+            columnName: domain_access

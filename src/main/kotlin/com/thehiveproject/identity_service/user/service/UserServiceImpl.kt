@@ -4,10 +4,11 @@ import com.thehiveproject.identity_service.auth.dto.CreateUserRequest
 import com.thehiveproject.identity_service.auth.exception.InvalidPasswordException
 import com.thehiveproject.identity_service.auth.service.RefreshTokenService
 import com.thehiveproject.identity_service.user.dto.*
-import com.thehiveproject.identity_service.user.entity.User
-import com.thehiveproject.identity_service.user.exception.*
+import com.thehiveproject.identity_service.user.exception.UserAlreadyDeactivatedException
+import com.thehiveproject.identity_service.user.exception.UserAlreadyDeletedException
+import com.thehiveproject.identity_service.user.exception.UserAlreadyExistsException
+import com.thehiveproject.identity_service.user.exception.UserNotFoundException
 import com.thehiveproject.identity_service.user.mapper.UserMapper.toDto
-import com.thehiveproject.identity_service.user.repository.RoleRepository
 import com.thehiveproject.identity_service.user.repository.UserRepository
 import com.thehiveproject.identity_service.user.repository.UserSpecification
 import org.springframework.data.domain.Page
@@ -21,23 +22,16 @@ class UserServiceImpl(
     private val userRepository: UserRepository,
     private val passwordEncoder: PasswordEncoder,
     private val refreshTokenService: RefreshTokenService,
-    private val roleRepository: RoleRepository
+    private val userFactory: UserFactory
 ) : UserService {
+
+    @Transactional
     override fun createInternalUser(request: CreateUserRequest): UserDto {
         if (userRepository.findByEmail(request.email).isPresent) {
             throw UserAlreadyExistsException("User already exists")
         }
 
-        val role = roleRepository.findByName(request.role)
-            .orElseThrow { RoleNotFoundException(request.role) }
-
-        val newUser = User(
-            email = request.email,
-            passwordHash = passwordEncoder.encode(request.password),
-            fullName = request.fullName,
-            domainAccess = request.domainAccess
-        )
-        newUser.addRole(role)
+        val newUser = userFactory.createUser(request.email, request.password, request.fullName, request.domainRoles)
 
         return userRepository.save(newUser).toDto()
     }
@@ -53,10 +47,6 @@ class UserServiceImpl(
     @Transactional(readOnly = true)
     override fun getAllUsers(pageable: Pageable, search: String?): Page<UserDto> {
         val spec = UserSpecification.hasSearchQuery(search)
-
-        // Example: If you wanted to filter by deleted status, you just chain it:
-        // spec = spec.and(UserSpecification.isDeleted(false))
-
         return userRepository.findAll(spec, pageable)
             .map { it.toDto() }
     }
@@ -105,15 +95,11 @@ class UserServiceImpl(
         val user = userRepository.findByEmail(email)
             .orElseThrow { UserNotFoundException("User not found") }
 
-        // 1. Verify Old Password
         if (!passwordEncoder.matches(request.oldPassword, user.passwordHash)) {
             throw InvalidPasswordException("Incorrect old password")
         }
 
-        // 2. Hash New Password
         user.passwordHash = passwordEncoder.encode(request.newPassword)
-
-        // 3. Save
         userRepository.save(user)
     }
 

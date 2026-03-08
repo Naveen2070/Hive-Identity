@@ -15,7 +15,6 @@ data class UserDto(
     val id: String? = null,
     val email: String? = null,
     val fullName: String? = null,
-    val domainAccess: Set<String> = setOf("events"),
     val roles: Set<UserRoleDto> = setOf()
 ) : Serializable {
     data class UserRoleDto(
@@ -29,6 +28,7 @@ data class UserDto(
         val deletedAt: Instant? = null,
         val id: String? = null,
         val roleId: Int? = null,
-        val roleName: String? = null
+        val roleName: String? = null,
+        val domain: String? = null
     ) : Serializable
 }

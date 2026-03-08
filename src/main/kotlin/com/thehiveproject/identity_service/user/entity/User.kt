@@ -3,8 +3,6 @@ package com.thehiveproject.identity_service.user.entity
 import com.thehiveproject.identity_service.common.entity.BaseEntity
 import com.thehiveproject.identity_service.common.utils.TsidFactory
 import jakarta.persistence.*
-import org.hibernate.annotations.JdbcTypeCode
-import org.hibernate.type.SqlTypes
 
 @Entity
 @Table(name = "app_users")
@@ -23,10 +21,6 @@ class User(
     @Column(name = "full_name", nullable = false, length = 100)
     var fullName: String,
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "domain_access", columnDefinition = "jsonb")
-    var domainAccess: MutableSet<String> = mutableSetOf("events"),
-
     @OneToMany(mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true)
     var roles: MutableSet<UserRole> = mutableSetOf()
 
@@ -39,16 +33,17 @@ class User(
         }
     }
 
-    fun addRole(role: Role) {
+    fun addRole(role: Role, domain: String) {
         val userRole = UserRole(
             user = this,
-            role = role
+            role = role,
+            domain = domain
         )
         this.roles.add(userRole)
     }
 
-    fun removeRole(role: Role) {
-        this.roles.removeIf { it.role.id == role.id }
+    fun removeRole(role: Role, domain: String) {
+        this.roles.removeIf { it.role.id == role.id && it.domain == domain }
     }
 
     fun activateUser() {

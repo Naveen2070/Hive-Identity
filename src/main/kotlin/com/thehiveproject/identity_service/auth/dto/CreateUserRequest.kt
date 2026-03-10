@@ -1,6 +1,5 @@
 package com.thehiveproject.identity_service.auth.dto
 
-import io.swagger.v3.oas.annotations.media.ArraySchema
 import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.NotBlank
@@ -37,18 +36,9 @@ data class CreateUserRequest(
     @field:Size(min = 8, message = "Password must be at least 8 characters")
     val password: String,
 
-    @field:ArraySchema(
-        schema = Schema(
-            description = "Domains the user has access to",
-            example = "events"
-        )
-    )
-    val domainAccess: MutableSet<String> = mutableSetOf("events"),
-
     @field:Schema(
-        description = "User role",
-        example = "USER",
-        defaultValue = "USER"
+        description = "Map of domains to requested roles. Example: { \"events\": \"ORGANIZER\", \"movies\": \"USER\" }",
+        example = "{\"events\": \"USER\"}"
     )
-    val role: String = "USER"
+    val domainRoles: Map<String, String> = mapOf("events" to "USER")
 ) : Serializable

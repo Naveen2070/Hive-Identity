@@ -6,13 +6,16 @@ import com.thehiveproject.identity_service.auth.service.RefreshTokenService
 import com.thehiveproject.identity_service.user.dto.ChangePasswordRequest
 import com.thehiveproject.identity_service.user.dto.UpdateProfileRequest
 import com.thehiveproject.identity_service.user.dto.UserSummary
-import com.thehiveproject.identity_service.user.entity.Role
 import com.thehiveproject.identity_service.user.entity.User
-import com.thehiveproject.identity_service.user.exception.*
-import com.thehiveproject.identity_service.user.repository.RoleRepository
+import com.thehiveproject.identity_service.user.exception.UserAlreadyDeactivatedException
+import com.thehiveproject.identity_service.user.exception.UserAlreadyDeletedException
+import com.thehiveproject.identity_service.user.exception.UserAlreadyExistsException
+import com.thehiveproject.identity_service.user.exception.UserNotFoundException
 import com.thehiveproject.identity_service.user.repository.UserRepository
+import com.thehiveproject.identity_service.user.service.UserFactory
 import com.thehiveproject.identity_service.user.service.UserServiceImpl
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
@@ -35,7 +38,9 @@ class UserServiceUnitTest {
     @Mock lateinit var userRepository: UserRepository
     @Mock lateinit var passwordEncoder: PasswordEncoder
     @Mock lateinit var refreshTokenService: RefreshTokenService
-    @Mock lateinit var roleRepository: RoleRepository
+
+    @Mock
+    lateinit var userFactory: UserFactory
 
     @InjectMocks
     lateinit var userService: UserServiceImpl
@@ -48,16 +53,10 @@ class UserServiceUnitTest {
         val user = User(
             email = defaultEmail,
             passwordHash = "hashedPassword",
-            fullName = "Test User",
-            domainAccess = mutableSetOf("ALL")
+            fullName = "Test User"
         )
         user.id = defaultUserId
         return user
-    }
-
-    private fun createDummyRole(): Role {
-        val role = Role(1,"ADMIN")
-        return role
     }
 
     // ==========================================
@@ -70,25 +69,20 @@ class UserServiceUnitTest {
             email = defaultEmail,
             password = "password123",
             fullName = "Test User",
-            domainAccess = mutableSetOf("ALL"),
-            role = "ADMIN"
+            domainRoles = mapOf("events" to "ADMIN")
         )
-        val role = createDummyRole()
         val savedUser = createDummyUser()
 
         `when`(userRepository.findByEmail(request.email)).thenReturn(Optional.empty())
-        `when`(roleRepository.findByName(request.role)).thenReturn(Optional.of(role))
-        `when`(passwordEncoder.encode(request.password)).thenReturn("hashedPassword")
-
+        `when`(userFactory.createUser(eq(request.email), eq(request.password), eq(request.fullName), any())).thenReturn(
+            savedUser
+        )
         `when`(userRepository.save(any())).thenReturn(savedUser)
 
         val response = userService.createInternalUser(request)
 
         assertEquals(defaultEmail, response.email)
-        verify(userRepository).save(check {
-            assertEquals("hashedPassword", it.passwordHash)
-            assertEquals("Test User", it.fullName)
-        })
+        verify(userRepository).save(any())
     }
 
     @Test
@@ -97,25 +91,12 @@ class UserServiceUnitTest {
             email = defaultEmail,
             password = "pass",
             fullName = "Name",
-            domainAccess = mutableSetOf("ALL"),
-            role = "USER"
+            domainRoles = mapOf("events" to "USER")
         )
 
         `when`(userRepository.findByEmail(defaultEmail)).thenReturn(Optional.of(createDummyUser()))
 
         assertThrows<UserAlreadyExistsException> {
-            userService.createInternalUser(request)
-        }
-        verify(userRepository, never()).save(any())
-    }
-    @Test
-    fun `createInternalUser should throw exception if role does not exist`() {
-        val request = CreateUserRequest(defaultEmail, "password123", "Test User", mutableSetOf("ALL"), "SUPER_ADMIN")
-
-        `when`(userRepository.findByEmail(request.email)).thenReturn(Optional.empty())
-        `when`(roleRepository.findByName(request.role)).thenReturn(Optional.empty())
-
-        assertThrows<RoleNotFoundException> {
             userService.createInternalUser(request)
         }
         verify(userRepository, never()).save(any())

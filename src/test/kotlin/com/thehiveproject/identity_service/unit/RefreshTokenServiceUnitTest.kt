@@ -46,8 +46,7 @@ class RefreshTokenServiceUnitTest {
         val user = User(
             email = "user@test.com",
             passwordHash = "hash",
-            fullName = "Test User",
-            domainAccess = mutableSetOf("ALL")
+            fullName = "Test User"
         )
         user.id = userId
         return user

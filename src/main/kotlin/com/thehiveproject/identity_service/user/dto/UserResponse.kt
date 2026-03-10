@@ -26,16 +26,10 @@ data class UserResponse(
     val email: String,
 
     @field:Schema(
-        description = "List of domain identifiers the user has access to",
-        example = "[\"domain-a\", \"domain-b\"]"
+        description = "Map of domains to roles assigned to the user",
+        example = "{\"events\": [\"ROLE_USER\"], \"movies\": [\"ROLE_ADMIN\"]}"
     )
-    val domainAccess: Set<String>,
-
-    @field:Schema(
-        description = "Roles assigned to the user",
-        example = "[\"ADMIN\", \"USER\"]"
-    )
-    val roles: List<String>,
+    val domainRoles: Map<String, List<String>>,
 
     @field:Schema(
         description = "Timestamp when the user account was created",
@@ -55,8 +49,7 @@ data class UserResponse(
                 id = user.id.toString(),
                 fullName = user.fullName,
                 email = user.email,
-                domainAccess = user.domainAccess,
-                roles = user.roles.map { it.role.name },
+                domainRoles = user.roles.groupBy({ it.domain }, { "ROLE_${it.role.name}" }),
                 createdAt = user.createdAt,
                 isActive = user.isEnabled()
             )

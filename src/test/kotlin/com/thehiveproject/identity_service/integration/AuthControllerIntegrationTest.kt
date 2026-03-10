@@ -69,9 +69,10 @@ class AuthControllerIntegrationTest {
     @WithMockUser
     fun `register should return 200 OK with tokens on success`() {
         val request = RegisterRequest(
+            fullName = "New User",
             email = "new@test.com",
             password = "SecurePassword123!",
-            fullName = "New User"
+            domainRoles = mapOf("events" to "USER")
         )
 
         `when`(authService.registerUser(any())).thenReturn(dummyAuthResponse)
@@ -91,9 +92,10 @@ class AuthControllerIntegrationTest {
     fun `register should return 409 CONFLICT if user already exists`() {
         // Use named arguments to map the fields correctly!
         val request = RegisterRequest(
+            fullName = "Exists User",
             email = "exists@test.com",
             password = "SecurePassword123!",
-            fullName = "Exists User"
+            domainRoles = mapOf("events" to "USER")
         )
 
         `when`(authService.registerUser(any())).thenThrow(UserAlreadyExistsException("User already exists"))

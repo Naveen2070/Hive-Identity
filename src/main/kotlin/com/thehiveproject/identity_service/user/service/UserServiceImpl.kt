@@ -128,7 +128,7 @@ class UserServiceImpl(
         if (user.isDeleted()) {
             throw UserAlreadyDeletedException("User is already deleted")
         }
-        user.softDeleteUser()
+        user.softDeleteUser(user.id)
 
         userRepository.save(user)
     }

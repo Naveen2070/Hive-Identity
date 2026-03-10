@@ -299,7 +299,7 @@ class UserServiceUnitTest {
 
         userService.deleteAccount(defaultEmail)
 
-        verify(user).softDeleteUser()
+        verify(user).softDeleteUser(defaultUserId)
         verify(userRepository).save(user)
     }
 

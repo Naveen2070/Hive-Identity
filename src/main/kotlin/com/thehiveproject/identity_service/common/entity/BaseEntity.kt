@@ -22,6 +22,9 @@ abstract class BaseEntity(
     @Column(name = "updated_by")
     var updatedBy: Long? = null,
 
+    @Column(name = "deleted_by")
+    var deletedBy: Long? = null,
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     var createdAt: Instant = Instant.now(),
@@ -64,11 +67,12 @@ abstract class BaseEntity(
         }
     }
 
-    protected fun softDelete() {
+    protected fun softDelete(deletedById: Long? = null) {
         if (!deleted) {
             deleted = true
             active = false
             deletedAt = Instant.now()
+            deletedBy = deletedById
         }
     }
 

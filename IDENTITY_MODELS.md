@@ -21,6 +21,7 @@ Common base class for all entities, providing auditing and soft-delete capabilit
 | `id`        | `Long?` / `Int?` | Unique identifier (TSID for Long, Identity for Int) |
 | `createdBy` | `Long?`          | ID of the user who created the record               |
 | `updatedBy` | `Long?`          | ID of the user who last updated the record          |
+| `deletedBy` | `Long?`          | ID of the user who soft-deleted the record          |
 | `createdAt` | `Instant`        | Timestamp of creation                               |
 | `updatedAt` | `Instant`        | Timestamp of last update                            |
 | `version`   | `Long`           | Optimistic locking version                          |
@@ -38,6 +39,7 @@ _Package: `com.thehiveproject.identity_service.user.entity`_
 | `email`        | `String`               | Unique email address                     |
 | `passwordHash` | `String`               | Hashed password                          |
 | `fullName`     | `String`               | User's full name                         |
+| `domainAccess` | `List<String>`         | List of domains the user has access to   |
 | `roles`        | `MutableSet<UserRole>` | One-to-many relationship with `UserRole` |
 
 ### `Role`

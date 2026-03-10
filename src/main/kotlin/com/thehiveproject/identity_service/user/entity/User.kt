@@ -54,8 +54,8 @@ class User(
         this.deactivate()
     }
 
-    fun softDeleteUser() {
-        this.softDelete()
+    fun softDeleteUser(deletedById: Long? = null) {
+        this.softDelete(deletedById)
     }
 
     fun restoreUser() {

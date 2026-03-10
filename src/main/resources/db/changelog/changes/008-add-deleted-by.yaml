@@ -1,0 +1,25 @@
+databaseChangeLog:
+  - changeSet:
+      id: 008-add-deleted-by-column
+      author: naveen
+      changes:
+        - addColumn:
+            tableName: roles
+            columns:
+              - column: { name: deleted_by, type: BIGINT }
+        - addColumn:
+            tableName: app_users
+            columns:
+              - column: { name: deleted_by, type: BIGINT }
+        - addColumn:
+            tableName: user_roles
+            columns:
+              - column: { name: deleted_by, type: BIGINT }
+        - addColumn:
+            tableName: refresh_tokens
+            columns:
+              - column: { name: deleted_by, type: BIGINT }
+        - addColumn:
+            tableName: password_reset_tokens
+            columns:
+              - column: { name: deleted_by, type: BIGINT }

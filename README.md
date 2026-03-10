@@ -229,76 +229,82 @@ erDiagram
     APP_USERS ||--o{ PASSWORD_RESET_TOKENS : "requests"
 
     APP_USERS {
-        long id PK
-        string email UK
-        string password_hash
-        string full_name
-        long created_by
-        long updated_by
-        instant created_at
-        instant updated_at
-        long version
-        boolean is_active
-        boolean is_deleted
-        instant deleted_at
+        long id PK "TSID (Time-Sorted ID)"
+        string email UK "Unique email address"
+        string password_hash "BCrypt hashed password"
+        string full_name "User's display name"
+        jsonb domain_access "JSON array of allowed domains"
+        long created_by FK "References APP_USERS(id)"
+        long updated_by FK "References APP_USERS(id)"
+        long deleted_by FK "References APP_USERS(id)"
+        timestamp created_at "Creation timestamp"
+        timestamp updated_at "Last update timestamp"
+        long version "Optimistic locking version"
+        boolean is_active "Global activity status"
+        boolean is_deleted "Soft-delete flag"
+        timestamp deleted_at "Timestamp of deletion"
     }
 
     ROLES {
-        int id PK
-        string name UK
-        long created_by
-        long updated_by
-        instant created_at
-        instant updated_at
-        long version
-        boolean is_active
-        boolean is_deleted
-        instant deleted_at
+        int id PK "Auto-increment ID"
+        string name UK "Role name (e.g. ROLE_USER, ROLE_ADMIN)"
+        long created_by FK "References APP_USERS(id)"
+        long updated_by FK "References APP_USERS(id)"
+        long deleted_by FK "References APP_USERS(id)"
+        timestamp created_at "Creation timestamp"
+        timestamp updated_at "Last update timestamp"
+        long version "Optimistic locking version"
+        boolean is_active "Activity status"
+        boolean is_deleted "Soft-delete flag"
+        timestamp deleted_at "Timestamp of deletion"
     }
 
     USER_ROLES {
-        long id PK
-        long user_id FK
-        int role_id FK
-        string domain
-        long created_by
-        long updated_by
-        instant created_at
-        instant updated_at
-        long version
-        boolean is_active
-        boolean is_deleted
-        instant deleted_at
+        long id PK "TSID (Time-Sorted ID)"
+        long user_id FK "References APP_USERS(id)"
+        int role_id FK "References ROLES(id)"
+        string domain "Specific domain (e.g. 'events', 'movies')"
+        long created_by FK "References APP_USERS(id)"
+        long updated_by FK "References APP_USERS(id)"
+        long deleted_by FK "References APP_USERS(id)"
+        timestamp created_at "Creation timestamp"
+        timestamp updated_at "Last update timestamp"
+        long version "Optimistic locking version"
+        boolean is_active "Status within domain"
+        boolean is_deleted "Soft-delete flag"
+        timestamp deleted_at "Timestamp of deletion"
     }
 
     REFRESH_TOKENS {
-        long id PK
-        long user_id FK
-        string token UK
-        instant expiry_date
-        long created_by
-        long updated_by
-        instant created_at
-        instant updated_at
-        long version
-        boolean is_active
-        boolean is_deleted
-        instant deleted_at
+        long id PK "TSID (Time-Sorted ID)"
+        long user_id FK "References APP_USERS(id)"
+        string token UK "Unique UUID token"
+        timestamp expiry_date "Token expiration time"
+        long created_by FK "References APP_USERS(id)"
+        long updated_by FK "References APP_USERS(id)"
+        long deleted_by FK "References APP_USERS(id)"
+        timestamp created_at "Creation timestamp"
+        timestamp updated_at "Last update timestamp"
+        long version "Optimistic locking version"
+        boolean is_active "Status"
+        boolean is_deleted "Soft-delete flag"
+        timestamp deleted_at "Timestamp of deletion"
     }
 
     PASSWORD_RESET_TOKENS {
-        long id PK
-        long user_id FK
-        string token UK
-        instant expiry_date
-        long created_by
-        long updated_by
-        instant created_at
-        instant updated_at
-        long version
-        boolean is_active
-        boolean is_deleted
-        instant deleted_at
+        long id PK "TSID (Time-Sorted ID)"
+        long user_id FK "References APP_USERS(id)"
+        string token UK "Unique UUID token"
+        timestamp expiry_date "Token expiration time"
+        long created_by FK "References APP_USERS(id)"
+        long updated_by FK "References APP_USERS(id)"
+        long deleted_by FK "References APP_USERS(id)"
+        timestamp created_at "Creation timestamp"
+        timestamp updated_at "Last update timestamp"
+        long version "Optimistic locking version"
+        boolean is_active "Status"
+        boolean is_deleted "Soft-delete flag"
+        timestamp deleted_at "Timestamp of deletion"
     }
 ```
 

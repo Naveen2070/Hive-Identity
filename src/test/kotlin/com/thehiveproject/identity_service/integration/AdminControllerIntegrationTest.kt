@@ -55,16 +55,17 @@ class AdminControllerIntegrationTest {
     // --- Helpers ---
     private val adminUri = "/api/admin/users"
     private val dummyUserDto = UserDto(
-        id = 1L.toString(),
+        id = "1",
         email = "admin@test.com",
         fullName = "Admin User",
         active = true,
         roles = setOf(
             UserDto.UserRoleDto(
                 active = true,
-                id = null,
-                roleId = null,
-                roleName = null
+                id = "1",
+                roleId = 1,
+                roleName = "ADMIN",
+                domain = "events"
             )
         )
     )
@@ -149,11 +150,10 @@ class AdminControllerIntegrationTest {
     @WithMockUser(roles = ["SUPER_ADMIN"])
     fun `createInternalUser should return 201 CREATED with valid payload`() {
         val request = CreateUserRequest(
+            fullName = "New Admin",
             email = "newadmin@test.com",
             password = "SecurePassword123!",
-            fullName = "New Admin",
-            domainAccess = mutableSetOf("ALL"),
-            role = "ADMIN"
+            domainRoles = mapOf("events" to "ADMIN")
         )
 
         `when`(userService.createInternalUser(any())).thenReturn(dummyUserDto.copy(email = "newadmin@test.com"))
@@ -173,11 +173,10 @@ class AdminControllerIntegrationTest {
     fun `createInternalUser should return 400 BAD REQUEST if payload fails validation`() {
         // Simulating a bad payload (e.g., missing email, blank fields) based on @Valid rules
         val badRequest = CreateUserRequest(
+            fullName = "",
             email = "not-an-email",
             password = "123",
-            fullName = "",
-            domainAccess = mutableSetOf("ALL"),
-            role = "ADMIN"
+            domainRoles = mapOf("events" to "ADMIN")
         )
 
         mockMvc.perform(

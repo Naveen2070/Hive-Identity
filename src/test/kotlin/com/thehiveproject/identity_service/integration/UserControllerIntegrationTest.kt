@@ -61,11 +61,10 @@ class UserControllerIntegrationTest {
     private val testUsername = "user@test.com"
 
     private val dummyUserResponse = UserResponse(
-        id = 1L.toString(),
+        id = "1",
         email = testUsername,
         fullName = "Test User",
-        roles = listOf("USER"),
-        domainAccess = setOf("events"),
+        domainRoles = mapOf("events" to listOf("ROLE_USER")),
         createdAt = Instant.now(),
         isActive = true
     )

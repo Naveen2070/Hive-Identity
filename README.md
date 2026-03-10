@@ -1,226 +1,184 @@
-# Hive-Identity - Authentication & User Management 🔐
+<p align="center">
+<img src="https://raw.githubusercontent.com/Naveen2070/The-Hive-Project/main/assets/hive-identity-logo.png" alt="Hive Identity Logo" width="150"/>
+</p>
 
-> A highly secure, centralized identity provider and user management microservice built with **Kotlin** and **Spring
-Boot 3**.
+<h1 align="center">Hive-Identity (Auth & User Service)</h1>
 
-Hive-Identity acts as the strict gatekeeper for the EventHive ecosystem. It is responsible for registering users,
-securely hashing passwords, issuing stateless JWTs, managing Role-Based Access Control (RBAC), and acting as the single
-source of truth for user data across all internal microservices.
+<p align="center"><em>The strict gatekeeper and central identity provider for the EventHive ecosystem, managing multi-tenant RBAC and secure user lifecycles.</em></p>
+
+<p align="center">
+<img src="https://img.shields.io/badge/Language-Kotlin-7F52FF?logo=kotlin&logoColor=white" alt="Kotlin"/>
+<img src="https://img.shields.io/badge/Framework-Spring_Boot_3-6DB33F?logo=springboot&logoColor=white" alt="Spring Boot 3"/>
+<img src="https://img.shields.io/badge/Database-PostgreSQL-336791?logo=postgresql&logoColor=white" alt="PostgreSQL"/>
+<img src="https://img.shields.io/badge/Messaging-RabbitMQ-FF6600?logo=rabbitmq&logoColor=white" alt="RabbitMQ"/>
+<img src="https://img.shields.io/badge/Security-JWT_+_HMAC-red" alt="Security"/>
+<img src="https://img.shields.io/badge/ID_Gen-TSID-blue" alt="TSID"/>
+<img src="https://img.shields.io/badge/Containerization-Docker-2496ED?logo=docker&logoColor=white" alt="Docker"/>
+<img src="https://img.shields.io/github/license/Naveen2070/The-Hive-Project" alt="License"/>
+</p>
+
+---
+
+> **Hive-Identity** is the foundational security layer of the Hive platform. Built with **Kotlin** and **Spring Boot 3
+**, it
+> provides a centralized, stateless authentication mechanism using JWTs, implements a robust multi-tenant RBAC model,
+> and facilitates secure service-to-service (S2S) communication across the microservice cluster.
 
 ---
 
 ### 🔗 Associated Repositories
 
-* 👉 **[EventHive UI (Frontend)](https://github.com/Naveen2070/EventHive-UI)**
-* 👉 **[Hive-Event (Core API)](https://github.com/Naveen2070/EventHive)**
+* 👉 **[The-Hive-Project (Main Hub)](https://github.com/Naveen2070/The-Hive-Project)**
+* 👉 **[Hive-Event (Core API)](https://github.com/Naveen2070/The-Hive-Project/tree/main/services/core-api)**
+* 👉 **[Hive-Forager-UI (Frontend)](https://github.com/Naveen2070/Hive-Forager-UI)**
 
 ---
 
 ## 🚀 Key Features
 
-* **🔒 Advanced Authentication:** Issues signed, stateless JSON Web Tokens (JWT) for secure authorization across the
-  microservice cluster. Includes secure refresh token rotation and logout blacklisting.
-* **🛡️ Industrial-Grade Password Hashing:** Utilizes **Argon2** (the winner of the Password Hashing Competition) to
-  defend against GPU-cracking and side-channel attacks.
-* **👤 Complete User Lifecycle:** Secure registration, profile management, account deactivation/deletion, and a robust
-  Forgot/Reset Password flow using secure, time-limited tokens.
-* **🤝 Internal S2S Gatekeeper:** Exposes a strict `/api/internal/` network path protected by a custom Filter enforcing *
-  *HMAC-SHA256 timestamped signatures** to prevent replay attacks from internal services.
-* **🐇 Async Notifications:** Publishes password reset and welcome emails to the `hive.notifications` RabbitMQ exchange
-  to keep API responses blazing fast.
-* **👑 Admin RBAC:** Dedicated endpoints for Super Admins to manage system roles, ban/unban users, and perform hard
-  deletions.
+* **🛡️ Multi-Tenant RBAC:** Implements a sophisticated domain-based permission model. Users are assigned roles within
+  specific domains (e.g., `events:ROLE_ORGANIZER`, `movies:ROLE_USER`), allowing for fine-grained access control across
+  different platform segments.
+* **🔑 Secure JWT Lifecycle:**
+  * **Stateless Auth:** Issues signed JWTs containing a comprehensive `permissions` map and domain access list.
+  * **Refresh Tokens:** Database-backed refresh token rotation for secure, long-lived sessions.
+  * **Blacklisting:** Immediate token invalidation upon logout using an optimized in-memory blacklist.
+* **🤝 Zero-Trust S2S Auth:** Protects internal data-fetching endpoints (`/api/internal/**`) with **HMAC-SHA256
+  signatures**. Requires time-sensitive hashes generated with a shared secret to prevent replay attacks and unauthorized
+  internal access.
+* **🆔 High-Performance IDs:** Utilizes **TSIDs (Time-Sorted Identifiers)** for all primary keys, ensuring global
+  uniqueness, URL safety, and optimal database indexing performance.
+* **🐇 Async Notification Engine:** Decouples user interactions from notification delivery. Password reset events and
+  welcome triggers are published to **RabbitMQ**, ensuring low-latency API responses.
+* **👤 Complete User Lifecycle:** Centralized logic for registration, multi-factor profile updates, secure password
+  hashing (BCrypt), and automated account status management.
+* **👑 Administrative Control:** Powerful admin suite for global user search, manual role provisioning, and account
+  auditing/moderation.
 
 ---
 
 ## 🛠️ Tech Stack
 
 * **Language:** Kotlin (JDK 21)
-* **Framework:** Spring Boot 3+
-* **Database:** PostgreSQL
-* **Security:** Spring Security 6, JWT (JJWT), Argon2
-* **Message Broker:** RabbitMQ
+* **Framework:** Spring Boot 3.4.3
+* **Security:** Spring Security, JWT (jjwt 0.12.6), HMAC-SHA256
+* **Database:** PostgreSQL 17
+* **ORM:** Spring Data JPA (Hibernate)
 * **Migration:** Liquibase
+* **Messaging:** RabbitMQ (AMQP)
+* **ID Generation:** TSID (Hypersistence Utils)
+* **API Documentation:** OpenAPI 3 / Swagger (SpringDoc 2.8.5)
 * **Build Tool:** Gradle (Kotlin DSL)
 
 ---
 
 ## 🏗️ Architecture
 
-The project follows a **Feature-Based (Package-by-Feature)** architecture to keep business capabilities strictly
-isolated and maintainable. Instead of grouping files by technical layers, code is encapsulated by the features they
-belong to:
+The project follows a **Feature-Based (Package-by-Feature)** architecture to maximize modularity and maintain clear
+domain boundaries:
 
 ```text
 src/main/kotlin/com/thehiveproject/identity_service
-├── admin               # Admin feature (Role assignments, user bans, hard deletes)
-├── auth                # Authentication feature (Login, Register, Tokens)
-│   ├── controller      # Auth routing
-│   ├── dto             # Auth request/response payloads
-│   ├── security        # JWT Filters, UserDetailsService, AuthenticationManager
-│   └── service         # Auth business logic
-├── common              # Shared cross-cutting concerns (DTOs, Exceptions, Utils like S2SAuth)
-├── config              # Global Spring configurations (RabbitMQ, Swagger, SecurityConfig)
-├── internal.controller # Protected endpoints strictly for Machine-to-Machine (S2S) communication
-├── notification        # RabbitMQ Producers (Triggering async email events)
-└── user                # User management feature (Profile operations)
-    ├── controller      # Profile routing (/me endpoints)
-    ├── entity          # User & Role JPA Entities
-    ├── repository      # Database interfaces
-    └── service         # User CRUD logic
+├── auth                # Authentication feature (Login, Register, JWT, Refresh Tokens)
+│   ├── controller      # Auth REST endpoints
+│   ├── dto             # Auth-specific DTOs
+│   ├── security        # JWT Filters, UserDetails, S2S Filters
+│   └── service         # Auth business logic & token management
+├── user                # User management feature (Profiles, Roles, Entities)
+│   ├── controller      # User profile REST endpoints
+│   ├── entity          # User, Role, UserRole JPA entities
+│   ├── mapper          # Entity-to-DTO conversion logic
+│   └── service         # User CRUD & Role management
+├── admin               # Administrative feature (Global user & role management)
+├── internal            # Internal-only endpoints for service-to-service calls
+├── common              # Shared logic (TSID Factory, Base Entities, Exceptions)
+├── config              # Spring beans, Security, Audit, and RabbitMQ config
+└── notification        # RabbitMQ producers for async events
 ```
-
----
-
-## 🔒 Security Architecture: Zero-Trust S2S
-
-To ensure absolute zero-trust even within the internal Docker network, Hive-Identity **rejects standard JWTs** on the
-`/api/internal/**` path.
-
-Instead, consuming services (like `Hive-Event`) must generate a cryptographically secure hash combining:
-
-1. Their unique Service ID.
-2. The exact UNIX timestamp (with a strict 60-second expiration window to prevent replay attacks).
-3. A heavily guarded, 256-bit Shared Secret.
-
-If the generated HMAC signature does not mathematically match the Identity Service's expected calculation, the request
-is instantly dropped with a `403 Forbidden`.
 
 ---
 
 ## ⚙️ Getting Started (How to Run)
 
-The application is fully containerized using a multi-stage Dockerfile that builds a lightweight Alpine Linux image
-running JDK 21 under a secure, non-root user.
-
 ### Prerequisites
 
 * **Java 21** (for manual runs)
 * **Docker & Docker Compose**
-* **Git**
+* **RabbitMQ**
+* **PostgreSQL**
 
 ### 1. Clone the Repository
 
 ```bash
-git clone [https://github.com/Naveen2070/Hive-Identity.git](https://github.com/Naveen2070/Hive-Identity.git)
-cd Hive-Identity
-
+git clone https://github.com/Naveen2070/The-Hive-Project.git
+cd The-Hive-Project/services/identity-service
 ```
 
 ### 2. Environment Variables (`.env`)
 
-Before running the application, create a `.env` file in the root directory. The `docker-compose.yml` expects these
-variables to configure the `prod` profile:
-
 ```ini
-# Database Config
+# Database
 DB_USERNAME=admin
-DB_PASSWORD=password
+DB_PASSWORD=SuperSecretPassword123!
 
 # JWT Security
 JWT_SECRET=your_super_secret_jwt_key_here
-JWT_EXPIRATION_MS=86400000
+JWT_EXPIRATION_MS=3600000
 
-# RabbitMQ Config
-RABBITMQ_USERNAME=guest
-RABBITMQ_PASSWORD=guest
-
-# S2S Internal Security
-INTERNAL_SHARED_SECRET=your_super_secret_shared_key
-
+# Zero-Trust S2S Config
+INTERNAL_SHARED_SECRET=your_s2s_shared_key
 ```
 
-### 3. Run via Docker Compose (Recommended)
-
-This method spins up a PostgreSQL database, a RabbitMQ broker, and the Identity application simultaneously.
+### 3. Run via Docker Compose
 
 ```bash
-# Build and start the containers in detached mode
 docker-compose up --build -d
-
 ```
-
-* The Auth API will be available at `http://localhost:8081`.
-* The PostgreSQL database is exposed on port `5433` (to prevent conflicts with the Core API's DB).
-* The RabbitMQ Management UI is available at `http://localhost:15672` (Login: guest / guest).
-
-To view the logs:
-
-```bash
-docker-compose logs -f identity-app
-
-```
-
-### 4. Run Manually (Local Development)
-
-If you prefer to run the Spring Boot application directly on your host machine for debugging:
-
-**Step A: Spin up the infrastructure (Database & RabbitMQ)**
-
-```bash
-# Notice we map the DB to 5433 to avoid port collisions
-docker run --name hive-identity-db -e POSTGRES_USER=admin -e POSTGRES_PASSWORD=password -e POSTGRES_DB=identity_db -p 5433:5432 -d postgres:17.7-alpine
-
-# Spin up RabbitMQ
-docker run --name hive-rabbitmq -p 5672:5672 -p 15672:15672 -d rabbitmq:3-management-alpine
-
-```
-
-**Step B: Run the application via Gradle**
-Ensure your local `application-dev.properties` points to `localhost:5433` for Postgres and `localhost:5672` for
-RabbitMQ. Then run:
-
-```bash
-./gradlew bootRun
-
-```
-
-*Liquibase will automatically migrate the schema on startup.*
 
 ---
 
 ## 🔌 API Endpoints
 
-### 🔐 Authentication (Public / Auth)
+### 🔐 Authentication
 
-| Method | Endpoint                    | Description                            | Access |
-|--------|-----------------------------|----------------------------------------|--------|
-| `POST` | `/api/auth/register`        | Register a new user                    | Public |
-| `POST` | `/api/auth/login`           | Login and receive Access/Refresh JWTs  | Public |
-| `POST` | `/api/auth/refresh`         | Refresh access token                   | Public |
-| `POST` | `/api/auth/logout`          | Blacklist token & revoke refresh token | Auth   |
-| `POST` | `/api/auth/forgot-password` | Request password reset email           | Public |
-| `POST` | `/api/auth/reset-password`  | Reset password via token               | Public |
+| Method | Endpoint                    | Description                           | Access |
+|--------|-----------------------------|---------------------------------------|--------|
+| `POST` | `/api/auth/register`        | Register a new user                   | Public |
+| `POST` | `/api/auth/login`           | Login and receive JWTs                | Public |
+| `POST` | `/api/auth/refresh`         | Rotate access token via refresh token | Public |
+| `POST` | `/api/auth/logout`          | Invalidate tokens                     | Auth   |
+| `POST` | `/api/auth/forgot-password` | Initiate password reset (Email)       | Public |
+| `POST` | `/api/auth/reset-password`  | Complete password reset               | Public |
 
-### 👤 User Management (Profile)
+### 👤 User Profile
 
-| Method   | Endpoint                     | Description                             | Access |
-|----------|------------------------------|-----------------------------------------|--------|
-| `GET`    | `/api/users/me`              | Get current authenticated user profile  | Auth   |
-| `PATCH`  | `/api/users/me`              | Update current profile details          | Auth   |
-| `POST`   | `/api/users/change-password` | Change password (requires old password) | Auth   |
-| `DELETE` | `/api/users/deactivate/me`   | Deactivate account                      | Auth   |
-| `DELETE` | `/api/users/me`              | Soft delete account                     | Auth   |
+| Method   | Endpoint                     | Description                | Access |
+|----------|------------------------------|----------------------------|--------|
+| `GET`    | `/api/users/me`              | Fetch current user profile | Auth   |
+| `PATCH`  | `/api/users/me`              | Update profile (Full Name) | Auth   |
+| `POST`   | `/api/users/change-password` | Securely change password   | Auth   |
+| `DELETE` | `/api/users/deactivate/me`   | Self-deactivation          | Auth   |
 
-### 👑 Admin / Role Management
+### 👑 Administration
 
-| Method   | Endpoint                       | Description                                | Access        |
-|----------|--------------------------------|--------------------------------------------|---------------|
-| `GET`    | `/api/admin/users`             | List/Search all users (Paginated)          | `SUPER_ADMIN` |
-| `GET`    | `/api/admin/users/{id}`        | Get detailed user profile by ID            | `SUPER_ADMIN` |
-| `POST`   | `/api/admin/users`             | Create internal user (Assign roles manual) | `SUPER_ADMIN` |
-| `PATCH`  | `/api/admin/users/{id}/status` | Ban/Unban user (Revokes tokens)            | `SUPER_ADMIN` |
-| `DELETE` | `/api/admin/users/{id}/hard`   | Hard delete user from DB (Irreversible)    | `SUPER_ADMIN` |
+| Method   | Endpoint                       | Description                            | Access        |
+|----------|--------------------------------|----------------------------------------|---------------|
+| `GET`    | `/api/admin/users`             | Paginated user search                  | `SUPER_ADMIN` |
+| `GET`    | `/api/admin/users/{id}`        | Get full user record by ID             | `SUPER_ADMIN` |
+| `POST`   | `/api/admin/users`             | Create internal user with manual roles | `SUPER_ADMIN` |
+| `PATCH`  | `/api/admin/users/{id}/status` | Toggle user active status (Ban/Unban)  | `SUPER_ADMIN` |
+| `DELETE` | `/api/admin/users/{id}/hard`   | Permanent record removal               | `SUPER_ADMIN` |
 
-### 🤖 Internal Machine-to-Machine (S2S)
+### 🤖 Internal (S2S)
 
-*(Strictly requires `X-Internal-Service-ID`, `X-Service-Timestamp`, and `X-Service-Token` headers)*
-
-| Method | Endpoint                    | Description                                 | Access        |
-|--------|-----------------------------|---------------------------------------------|---------------|
-| `GET`  | `/api/internal/users/{id}`  | Get basic user summary by ID                | Internal Only |
-| `POST` | `/api/internal/users/batch` | Batch fetch user details for Data Hydration | Internal Only |
+| Method | Endpoint                    | Description                               | Access   |
+|--------|-----------------------------|-------------------------------------------|----------|
+| `GET`  | `/api/internal/users/{id}`  | Resolve user summary (for data hydration) | Internal |
+| `POST` | `/api/internal/users/batch` | Batch resolve user summaries              | Internal |
 
 ---
 
-**Built with ❤️ by naveen**
+<p align="center">
+Built with ❤️, ☕, and secure distributed systems.🛡️<br>
+<b>Architected and maintained by <a href="https://github.com/Naveen2070">Naveen</a></b>
+</p>

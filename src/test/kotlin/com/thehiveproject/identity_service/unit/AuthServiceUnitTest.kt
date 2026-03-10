@@ -14,11 +14,9 @@ import com.thehiveproject.identity_service.auth.service.RefreshTokenService
 import com.thehiveproject.identity_service.auth.service.TokenBlacklistService
 import com.thehiveproject.identity_service.user.entity.Role
 import com.thehiveproject.identity_service.user.entity.User
-import com.thehiveproject.identity_service.user.entity.UserRole
-import com.thehiveproject.identity_service.user.exception.RoleNotFoundException
 import com.thehiveproject.identity_service.user.exception.UserAlreadyExistsException
-import com.thehiveproject.identity_service.user.repository.RoleRepository
 import com.thehiveproject.identity_service.user.repository.UserRepository
+import com.thehiveproject.identity_service.user.service.UserFactory
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -46,9 +44,6 @@ class AuthServiceUnitTest {
     lateinit var userRepository: UserRepository
 
     @Mock
-    lateinit var roleRepository: RoleRepository
-
-    @Mock
     lateinit var authenticationManager: AuthenticationManager
 
     @Mock
@@ -69,6 +64,9 @@ class AuthServiceUnitTest {
     @Mock
     lateinit var eventPublisher: ApplicationEventPublisher
 
+    @Mock
+    lateinit var userFactory: UserFactory
+
     @InjectMocks
     lateinit var authService: AuthServiceImpl
 
@@ -81,15 +79,12 @@ class AuthServiceUnitTest {
         val user = User(
             email = defaultEmail,
             passwordHash = encodedPassword,
-            fullName = "Test User",
-            domainAccess = mutableSetOf("ALL")
+            fullName = "Test User"
         )
         user.id = 1L
 
-        val role = Role(1, "Standard user")
-
-        val userRole = UserRole(1L, user, role)
-        user.roles.add(userRole)
+        val role = Role(1, "USER")
+        user.addRole(role, "events")
 
         return user
     }
@@ -100,13 +95,13 @@ class AuthServiceUnitTest {
 
     @Test
     fun `registerUser should succeed for valid USER role`() {
-        val request = RegisterRequest(defaultEmail, defaultPassword, "Test User", mutableSetOf("ALL"), "USER")
-        val role = Role(1, "Standard User")
+        val request = RegisterRequest("Test User", defaultEmail, defaultPassword, mapOf("events" to "USER"))
         val savedUser = createDummyUser()
 
         `when`(userRepository.findByEmail(request.email)).thenReturn(Optional.empty())
-        `when`(roleRepository.findByName(request.role)).thenReturn(Optional.of(role))
-        `when`(passwordEncoder.encode(request.password)).thenReturn(encodedPassword)
+        `when`(userFactory.createUser(eq(request.email), eq(request.password), eq(request.fullName), any())).thenReturn(
+            savedUser
+        )
         `when`(userRepository.save(any())).thenReturn(savedUser)
         `when`(jwtService.generateToken(any(), any())).thenReturn("access-token")
         `when`(refreshTokenService.createRefreshToken(savedUser.id!!)).thenReturn("refresh-token")
@@ -121,7 +116,7 @@ class AuthServiceUnitTest {
 
     @Test
     fun `registerUser should throw exception if user already exists`() {
-        val request = RegisterRequest("Test", defaultEmail, defaultPassword, mutableSetOf("ALL"), "USER")
+        val request = RegisterRequest("Test User", defaultEmail, defaultPassword, mapOf("events" to "USER"))
         `when`(userRepository.findByEmail(defaultEmail)).thenReturn(Optional.of(createDummyUser()))
 
         assertThrows<UserAlreadyExistsException> {
@@ -132,24 +127,13 @@ class AuthServiceUnitTest {
 
     @Test
     fun `registerUser should throw exception if role is not allowed`() {
-        val request = RegisterRequest("Test", defaultEmail, defaultPassword, mutableSetOf("ALL"), "ADMIN")
+        val request = RegisterRequest("Test User", defaultEmail, defaultPassword, mapOf("events" to "ADMIN"))
         `when`(userRepository.findByEmail(defaultEmail)).thenReturn(Optional.empty())
 
         val exception = assertThrows<IllegalArgumentException> {
             authService.registerUser(request)
         }
         assertTrue(exception.message!!.contains("Invalid role"))
-    }
-
-    @Test
-    fun `registerUser should throw exception if role does not exist in DB`() {
-        val request = RegisterRequest("Test", defaultEmail, defaultPassword, mutableSetOf("ALL"), "USER")
-        `when`(userRepository.findByEmail(defaultEmail)).thenReturn(Optional.empty())
-        `when`(roleRepository.findByName("USER")).thenReturn(Optional.empty())
-
-        assertThrows<RoleNotFoundException> {
-            authService.registerUser(request)
-        }
     }
 
     // ==========================================

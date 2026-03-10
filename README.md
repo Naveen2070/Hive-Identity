@@ -75,6 +75,238 @@
 ## 🏗️ Architecture
 
 The project follows a **Feature-Based (Package-by-Feature)** architecture to maximize modularity and maintain clear
+domain boundaries. Below are the structural diagrams of the Hive-Identity engine.
+
+### High-Level Ecosystem
+
+```mermaid
+flowchart TB
+
+classDef external fill:#f5f5f5,stroke:#9e9e9e,stroke-width:2px,color:#212121
+classDef platform fill:#e3f2fd,stroke:#64b5f6,stroke-width:2px,color:#0d47a1
+classDef identity fill:#fce4ec,stroke:#f48fb1,stroke-width:2px,color:#c2185b
+
+subgraph USERS ["Users"]
+    user[End User]
+    admin[Platform Admin]
+end
+
+subgraph HIVE ["The Hive Platform Context"]
+    frontend["Frontend Applications"]:::platform
+    gateway["Nginx API Gateway"]:::platform
+    identity["Hive-Identity (IAM Service)"]:::identity
+    core_api["Hive-Event (Core API)"]:::platform
+    movies["Hive-Movie (Service)"]:::platform
+end
+
+subgraph EXTERNAL ["External Systems"]
+    email["Email Provider"]:::external
+end
+
+user --> frontend
+admin --> frontend
+
+frontend --> gateway
+gateway --> identity
+gateway --> core_api
+gateway --> movies
+
+core_api -. HMAC S2S .-> identity
+movies -. HMAC S2S .-> identity
+identity --> email
+```
+
+### Container Architecture
+
+```mermaid
+flowchart TB
+    classDef edge fill:#fff3e0,stroke:#ffcc80,stroke-width:2px,color:#e65100
+    classDef identity fill:#fce4ec,stroke:#f48fb1,stroke-width:2px,color:#c2185b
+    classDef db fill:#eceff1,stroke:#b0bec5,stroke-width:2px,color:#263238
+    classDef broker fill:#ffebee,stroke:#ef9a9a,stroke-width:2px,color:#b71c1c
+    classDef core fill:#e8f5e9,stroke:#a5d6a7,stroke-width:2px,color:#1b5e20
+
+    subgraph EDGE ["Edge Layer"]
+      nginx["Nginx API Gateway"]:::edge
+    end
+
+    subgraph DOCKER ["Docker Network"]
+      direction TB
+      
+      subgraph SERVICE ["Identity Service"]
+        auth["Hive-Identity Engine (Kotlin + Spring Boot)"]:::identity
+      end
+
+      subgraph PERSISTENCE ["Data Storage"]
+        postgres[(PostgreSQL 17)]:::db
+      end
+
+      subgraph MESSAGING ["Event Bus"]
+        rabbit[(RabbitMQ)]:::broker
+      end
+      
+      core_api["Hive-Event Engine"]:::core
+      movies["Hive-Movie Engine"]:::core
+    end
+
+    nginx --> auth
+    auth --> postgres
+    auth -- Publish Auth Events --> rabbit
+    core_api -. HMAC S2S .-> auth
+    movies -. HMAC S2S .-> auth
+```
+
+### Layered Architecture
+
+```mermaid
+flowchart TB
+
+classDef layer_api fill:#e3f2fd,stroke:#90caf9,stroke-width:2px,color:#0d47a1
+classDef layer_app fill:#e8f5e9,stroke:#a5d6a7,stroke-width:2px,color:#1b5e20
+classDef layer_dom fill:#fff3e0,stroke:#ffcc80,stroke-width:2px,color:#e65100
+classDef layer_infra fill:#f3e5f5,stroke:#ce93d8,stroke-width:2px,color:#4a148c
+
+subgraph API_LAYER ["Presentation Layer (api)"]
+    ctrl[Controllers]:::layer_api
+    dto[DTOs]:::layer_api
+    mapper[Mappers]:::layer_api
+end
+
+subgraph APP_LAYER ["Application Layer (application)"]
+    svc[Service Implementations]:::layer_app
+    usecase[Security / JWT Services]:::layer_app
+end
+
+subgraph DOMAIN_LAYER ["Domain Layer (domain)"]
+    model[Entities / Roles]:::layer_dom
+    repo_intf[Repository Interfaces]:::layer_dom
+    logic[Auth Business Logic]:::layer_dom
+end
+
+subgraph INFRA_LAYER ["Infrastructure Layer (infrastructure)"]
+    repo_impl[JPA Repositories]:::layer_infra
+    sec[Security Filters / HMAC]:::layer_infra
+    mq[RabbitMQ Producers]:::layer_infra
+    tsid[TSID Factory]:::layer_infra
+end
+
+API_LAYER --> APP_LAYER
+APP_LAYER --> DOMAIN_LAYER
+APP_LAYER --> INFRA_LAYER
+INFRA_LAYER --> DOMAIN_LAYER
+```
+
+### Zero-Trust Security Model
+
+```mermaid
+flowchart LR
+
+classDef client fill:#e3f2fd,stroke:#90caf9,stroke-width:2px,color:#0d47a1
+classDef gateway fill:#fff3e0,stroke:#ffcc80,stroke-width:2px,color:#e65100
+classDef identity fill:#fce4ec,stroke:#f48fb1,stroke-width:2px,color:#c2185b
+classDef service fill:#e8f5e9,stroke:#a5d6a7,stroke-width:2px,color:#1b5e20
+
+user[User]:::client
+gateway[Nginx Gateway]:::gateway
+identity[Hive-Identity]:::identity
+events[Hive-Event / Movie]:::service
+
+user -->|1. Authenticate| identity
+identity -->|2. Issue Signed JWT| user
+user -->|3. Request with JWT| gateway
+gateway -->|4. Route Request| events
+events -.->|5. HMAC S2S Request| identity
+identity -.->|6. Resolve User Data| events
+```
+
+### Entity Relationship Diagram (ERD)
+
+```mermaid
+erDiagram
+    APP_USERS ||--o{ USER_ROLES : "has"
+    ROLES ||--o{ USER_ROLES : "defined in"
+    APP_USERS ||--o{ REFRESH_TOKENS : "owns"
+    APP_USERS ||--o{ PASSWORD_RESET_TOKENS : "requests"
+
+    APP_USERS {
+        long id PK
+        string email UK
+        string password_hash
+        string full_name
+        long created_by
+        long updated_by
+        instant created_at
+        instant updated_at
+        long version
+        boolean is_active
+        boolean is_deleted
+        instant deleted_at
+    }
+
+    ROLES {
+        int id PK
+        string name UK
+        long created_by
+        long updated_by
+        instant created_at
+        instant updated_at
+        long version
+        boolean is_active
+        boolean is_deleted
+        instant deleted_at
+    }
+
+    USER_ROLES {
+        long id PK
+        long user_id FK
+        int role_id FK
+        string domain
+        long created_by
+        long updated_by
+        instant created_at
+        instant updated_at
+        long version
+        boolean is_active
+        boolean is_deleted
+        instant deleted_at
+    }
+
+    REFRESH_TOKENS {
+        long id PK
+        long user_id FK
+        string token UK
+        instant expiry_date
+        long created_by
+        long updated_by
+        instant created_at
+        instant updated_at
+        long version
+        boolean is_active
+        boolean is_deleted
+        instant deleted_at
+    }
+
+    PASSWORD_RESET_TOKENS {
+        long id PK
+        long user_id FK
+        string token UK
+        instant expiry_date
+        long created_by
+        long updated_by
+        instant created_at
+        instant updated_at
+        long version
+        boolean is_active
+        boolean is_deleted
+        instant deleted_at
+    }
+```
+
+---
+
+## 📂 Project Structure
+
+The project follows a **Feature-Based (Package-by-Feature)** architecture to maximize modularity and maintain clear
 domain boundaries:
 
 ```text

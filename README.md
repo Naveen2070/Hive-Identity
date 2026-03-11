@@ -223,88 +223,57 @@ identity -.->|6. Resolve User Data| events
 
 ```mermaid
 erDiagram
+    BASE_AUDITABLE_ENTITY ||--|| APP_USERS : "inherits"
+    BASE_AUDITABLE_ENTITY ||--|| ROLES : "inherits"
+    BASE_AUDITABLE_ENTITY ||--|| USER_ROLES : "inherits"
+    BASE_AUDITABLE_ENTITY ||--|| REFRESH_TOKENS : "inherits"
+    BASE_AUDITABLE_ENTITY ||--|| PASSWORD_RESET_TOKENS : "inherits"
+
     APP_USERS ||--o{ USER_ROLES : "has"
     ROLES ||--o{ USER_ROLES : "defined in"
     APP_USERS ||--o{ REFRESH_TOKENS : "owns"
     APP_USERS ||--o{ PASSWORD_RESET_TOKENS : "requests"
 
+    BASE_AUDITABLE_ENTITY {
+        long id PK "TSID / Auto-increment"
+        long created_by FK "References APP_USERS(id)"
+        long updated_by FK "References APP_USERS(id)"
+        long deleted_by FK "References APP_USERS(id)"
+        timestamp created_at "Creation timestamp"
+        timestamp updated_at "Last update timestamp"
+        long version "Optimistic locking version"
+        boolean is_active "Status"
+        boolean is_deleted "Soft-delete flag"
+        timestamp deleted_at "Timestamp of deletion"
+    }
+
     APP_USERS {
-        long id PK "TSID (Time-Sorted ID)"
         string email UK "Unique email address"
         string password_hash "BCrypt hashed password"
         string full_name "User's display name"
         jsonb domain_access "JSON array of allowed domains"
-        long created_by FK "References APP_USERS(id)"
-        long updated_by FK "References APP_USERS(id)"
-        long deleted_by FK "References APP_USERS(id)"
-        timestamp created_at "Creation timestamp"
-        timestamp updated_at "Last update timestamp"
-        long version "Optimistic locking version"
-        boolean is_active "Global activity status"
-        boolean is_deleted "Soft-delete flag"
-        timestamp deleted_at "Timestamp of deletion"
     }
 
     ROLES {
-        int id PK "Auto-increment ID"
         string name UK "Role name (e.g. ROLE_USER, ROLE_ADMIN)"
-        long created_by FK "References APP_USERS(id)"
-        long updated_by FK "References APP_USERS(id)"
-        long deleted_by FK "References APP_USERS(id)"
-        timestamp created_at "Creation timestamp"
-        timestamp updated_at "Last update timestamp"
-        long version "Optimistic locking version"
-        boolean is_active "Activity status"
-        boolean is_deleted "Soft-delete flag"
-        timestamp deleted_at "Timestamp of deletion"
     }
 
     USER_ROLES {
-        long id PK "TSID (Time-Sorted ID)"
         long user_id FK "References APP_USERS(id)"
         int role_id FK "References ROLES(id)"
         string domain "Specific domain (e.g. 'events', 'movies')"
-        long created_by FK "References APP_USERS(id)"
-        long updated_by FK "References APP_USERS(id)"
-        long deleted_by FK "References APP_USERS(id)"
-        timestamp created_at "Creation timestamp"
-        timestamp updated_at "Last update timestamp"
-        long version "Optimistic locking version"
-        boolean is_active "Status within domain"
-        boolean is_deleted "Soft-delete flag"
-        timestamp deleted_at "Timestamp of deletion"
     }
 
     REFRESH_TOKENS {
-        long id PK "TSID (Time-Sorted ID)"
         long user_id FK "References APP_USERS(id)"
         string token UK "Unique UUID token"
         timestamp expiry_date "Token expiration time"
-        long created_by FK "References APP_USERS(id)"
-        long updated_by FK "References APP_USERS(id)"
-        long deleted_by FK "References APP_USERS(id)"
-        timestamp created_at "Creation timestamp"
-        timestamp updated_at "Last update timestamp"
-        long version "Optimistic locking version"
-        boolean is_active "Status"
-        boolean is_deleted "Soft-delete flag"
-        timestamp deleted_at "Timestamp of deletion"
     }
 
     PASSWORD_RESET_TOKENS {
-        long id PK "TSID (Time-Sorted ID)"
         long user_id FK "References APP_USERS(id)"
         string token UK "Unique UUID token"
         timestamp expiry_date "Token expiration time"
-        long created_by FK "References APP_USERS(id)"
-        long updated_by FK "References APP_USERS(id)"
-        long deleted_by FK "References APP_USERS(id)"
-        timestamp created_at "Creation timestamp"
-        timestamp updated_at "Last update timestamp"
-        long version "Optimistic locking version"
-        boolean is_active "Status"
-        boolean is_deleted "Soft-delete flag"
-        timestamp deleted_at "Timestamp of deletion"
     }
 ```
 

@@ -4,6 +4,8 @@ import com.thehiveproject.identity_service.auth.dto.CreateUserRequest
 import com.thehiveproject.identity_service.common.dto.PaginatedResponse
 import com.thehiveproject.identity_service.common.dto.toPaginatedResponse
 import com.thehiveproject.identity_service.common.exception.ApiErrorResponse
+import com.thehiveproject.identity_service.user.dto.AddUserRoleRequest
+import com.thehiveproject.identity_service.user.dto.UpdateUserRolesRequest
 import com.thehiveproject.identity_service.user.dto.UserDto
 import com.thehiveproject.identity_service.user.mapper.toSanitized
 import com.thehiveproject.identity_service.user.service.UserService
@@ -239,5 +241,90 @@ class AdminController(
     fun hardDeleteUser(@PathVariable id: Long): ResponseEntity<Void> {
         userService.hardDeleteUser(id)
         return ResponseEntity.noContent().build()
+    }
+
+    @Operation(summary = "Add role to user", description = "Assign a new role to a user for a specific domain")
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200", description = "Role added successfully", content = [Content(
+                    mediaType = "application/json",
+                    schema = Schema(implementation = UserDto::class)
+                )]
+            ),
+            ApiResponse(
+                responseCode = "404", description = "User or Role not found", content = [Content(
+                    mediaType = "application/json",
+                    schema = Schema(implementation = ApiErrorResponse::class)
+                )]
+            ),
+            ApiResponse(
+                responseCode = "400", description = "Invalid request payload", content = [Content(
+                    mediaType = "application/json",
+                    schema = Schema(implementation = ApiErrorResponse::class)
+                )]
+            )
+        ]
+    )
+    @PostMapping("/users/{id}/roles")
+    fun addUserRole(
+        @PathVariable id: Long,
+        @Valid @RequestBody request: AddUserRoleRequest
+    ): ResponseEntity<UserDto> {
+        val user = userService.addUserRole(id, request.domain, request.roleName)
+        return ResponseEntity.ok(user)
+    }
+
+    @Operation(summary = "Update user roles", description = "Update or assign multiple roles to a user across domains")
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200", description = "Roles updated successfully", content = [Content(
+                    mediaType = "application/json",
+                    schema = Schema(implementation = UserDto::class)
+                )]
+            ),
+            ApiResponse(
+                responseCode = "404", description = "User or Role not found", content = [Content(
+                    mediaType = "application/json",
+                    schema = Schema(implementation = ApiErrorResponse::class)
+                )]
+            )
+        ]
+    )
+    @PutMapping("/users/{id}/roles")
+    fun updateUserRoles(
+        @PathVariable id: Long,
+        @Valid @RequestBody request: UpdateUserRolesRequest
+    ): ResponseEntity<UserDto> {
+        val user = userService.updateUserRoles(id, request.domainRoles)
+        return ResponseEntity.ok(user)
+    }
+
+    @Operation(summary = "Remove role from user", description = "Remove a specific role from a user in a domain")
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200", description = "Role removed successfully", content = [Content(
+                    mediaType = "application/json",
+                    schema = Schema(implementation = UserDto::class)
+                )]
+            ),
+            ApiResponse(
+                responseCode = "404", description = "User or Role not found", content = [Content(
+                    mediaType = "application/json",
+                    schema = Schema(implementation = ApiErrorResponse::class)
+                )]
+            )
+        ]
+    )
+    @DeleteMapping("/users/{id}/roles/{domain}/{roleName}")
+    fun removeUserRole(
+        @PathVariable id: Long,
+        @PathVariable domain: String,
+        @PathVariable roleName: String
+    ): ResponseEntity<UserDto> {
+        val user = userService.removeUserRole(id, domain, roleName)
+        return ResponseEntity.ok(user)
     }
 }

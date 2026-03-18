@@ -4,11 +4,13 @@ import com.thehiveproject.identity_service.auth.dto.CreateUserRequest
 import com.thehiveproject.identity_service.auth.exception.InvalidPasswordException
 import com.thehiveproject.identity_service.auth.service.RefreshTokenService
 import com.thehiveproject.identity_service.user.dto.*
+import com.thehiveproject.identity_service.user.exception.RoleNotFoundException
 import com.thehiveproject.identity_service.user.exception.UserAlreadyDeactivatedException
 import com.thehiveproject.identity_service.user.exception.UserAlreadyDeletedException
 import com.thehiveproject.identity_service.user.exception.UserAlreadyExistsException
 import com.thehiveproject.identity_service.user.exception.UserNotFoundException
 import com.thehiveproject.identity_service.user.mapper.UserMapper.toDto
+import com.thehiveproject.identity_service.user.repository.RoleRepository
 import com.thehiveproject.identity_service.user.repository.UserRepository
 import com.thehiveproject.identity_service.user.repository.UserSpecification
 import org.springframework.data.domain.Page
@@ -20,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class UserServiceImpl(
     private val userRepository: UserRepository,
+    private val roleRepository: RoleRepository,
     private val passwordEncoder: PasswordEncoder,
     private val refreshTokenService: RefreshTokenService,
     private val userFactory: UserFactory
@@ -154,5 +157,45 @@ class UserServiceImpl(
     @Transactional(readOnly = true)
     override fun findBatchUserSummary(ids: List<Long>): List<UserSummary> {
         return userRepository.findByIdIn(ids)
+    }
+
+    @Transactional
+    override fun addUserRole(userId: Long, domain: String, roleName: String): UserDto {
+        val user = userRepository.findById(userId)
+            .orElseThrow { UserNotFoundException("User not found") }
+
+        val role = roleRepository.findByName(roleName)
+            .orElseThrow { RoleNotFoundException(name = roleName) }
+
+        user.addRole(role, domain)
+        return userRepository.save(user).toDto()
+    }
+
+    @Transactional
+    override fun removeUserRole(userId: Long, domain: String, roleName: String): UserDto {
+        val user = userRepository.findById(userId)
+            .orElseThrow { UserNotFoundException("User not found") }
+
+        val role = roleRepository.findByName(roleName)
+            .orElseThrow { RoleNotFoundException(name = roleName) }
+
+        user.removeRole(role, domain)
+        return userRepository.save(user).toDto()
+    }
+
+    @Transactional
+    override fun updateUserRoles(userId: Long, domainRoles: Map<String, String>): UserDto {
+        val user = userRepository.findById(userId)
+            .orElseThrow { UserNotFoundException("User not found") }
+
+        domainRoles.forEach { (domain, roleName) ->
+            val role = roleRepository.findByName(roleName)
+                .orElseThrow { RoleNotFoundException(name = roleName) }
+
+            user.roles.removeIf { it.domain == domain }
+            user.addRole(role, domain)
+        }
+
+        return userRepository.save(user).toDto()
     }
 }

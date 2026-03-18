@@ -16,6 +16,9 @@ interface UserService {
     fun deactivateAccount(email: String)
     fun deleteAccount(email: String)
     fun hardDeleteUser(id: Long)
+    fun addUserRole(userId: Long, domain: String, roleName: String): UserDto
+    fun removeUserRole(userId: Long, domain: String, roleName: String): UserDto
+    fun updateUserRoles(userId: Long, domainRoles: Map<String, String>): UserDto
     fun getUserSummaryById(id: Long): UserSummary
     fun findBatchUserSummary(ids: List<Long>): List<UserSummary>
 }
